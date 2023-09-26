@@ -31,9 +31,9 @@
      defined(RADIO_TX12MK2) || defined(RADIO_BOXER) || defined(RADIO_ZORRO) || \
      defined(RADIO_T8) || defined(RADIO_COMMANDO8) || defined(RADIO_TPRO)) &&  \
     !defined(RADIO_LR3PRO)
-  #define LCD_CONTRAST_OFFSET            -10
+  #define LCD_CONTRAST_OFFSET            0
 #else
-  #define LCD_CONTRAST_OFFSET            160
+  #define LCD_CONTRAST_OFFSET            0
 #endif
 #define RESET_WAIT_DELAY_MS            300 // Wait time after LCD reset before first command
 #define WAIT_FOR_DMA_END()             do { } while (lcd_busy)
@@ -136,7 +136,7 @@ void lcdStart()
 	lcdWriteCommand(0x40|0x00);	// set display start line
 	
 	lcdWriteCommand(0x81);	// set contrast control --> Set SEG Output Current
-	//write_CMD(0x32);
+	//lcdWriteCommand(0x32);
 	lcdWriteCommand(0x7F);
 	
 #if defined(LCD_VERTICAL_INVERT)
@@ -144,12 +144,12 @@ void lcdStart()
 	//     0xA0 => Column Address 0 Mapped to SEG0
 	//     0xA1 => Column Address 0 Mapped to SEG127
 
-  lcdWriteCommand(0xc8);	// set com scan direction
+	lcdWriteCommand(0xc8);	// set com scan direction
 	//     0xC0 => Scan from COM0 to 63
 	//     0xC8 => Scan from COM63 to 0
 
-#else // #if defined(LCD_VERTICAL_INVERT)
-  lcdWriteCommand(0xA0);	// set segment remap
+#else	//	#if defined(LCD_HORIZONTAL_INVERT)
+	lcdWriteCommand(0xA0);	// set segment remap
 	//     0xA0 => Column Address 0 Mapped to SEG0
 	//     0xA1 => Column Address 0 Mapped to SEG127
 
@@ -200,11 +200,11 @@ void lcdStart()
 	//     0xA6 => Normal Display
 	//     0xA7 => Inverse Display On
 	
-	lcdWriteCommand(0x91);  //manufacturer provided
-	lcdWriteCommand(0x3F);  //manufacturer provided
-	lcdWriteCommand(0x3F);  //manufacturer provided
-	lcdWriteCommand(0x3F);  //manufacturer provided
-	lcdWriteCommand(0x3F);  //manufacturer provided
+	lcdWriteCommand(0x91);	//manufacturer provided
+	lcdWriteCommand(0x3F);	//manufacturer provided
+	lcdWriteCommand(0x3F);	//manufacturer provided
+	lcdWriteCommand(0x3F);	//manufacturer provided
+	lcdWriteCommand(0x3F);	//manufacturer provided
 
 
 /*
