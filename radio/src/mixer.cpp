@@ -23,8 +23,10 @@
 #include "timers.h"
 #include "switches.h"
 #include "input_mapping.h"
+#include "mixes.h"
 
 #include "hal/adc_driver.h"
+#include "hal/trainer_driver.h"
 #include "hal/switch_driver.h"
 
 uint8_t s_mixer_first_run_done = false;
@@ -162,7 +164,7 @@ void applyExpos(int16_t * anas, uint8_t mode, uint8_t ovwrIdx, int16_t ovwrValue
       continue;
     if (ed->flightModes & (1<<mixerCurrentFlightMode))
       continue;
-    if (ed->srcRaw >= MIXSRC_FIRST_TRAINER && ed->srcRaw <= MIXSRC_LAST_TRAINER && !IS_TRAINER_INPUT_VALID())
+    if (ed->srcRaw >= MIXSRC_FIRST_TRAINER && ed->srcRaw <= MIXSRC_LAST_TRAINER && !is_trainer_connected())
       continue;
     if (getSwitch(ed->swtch)) {
       int32_t v;
@@ -235,8 +237,8 @@ int16_t applyLimits(uint8_t channel, int32_t value)
   }
 #endif
 
-  if (isFunctionActive(FUNCTION_TRAINER_CHANNELS) && IS_TRAINER_INPUT_VALID()) {
-    return ppmInput[channel] * 2;
+  if (isFunctionActive(FUNCTION_TRAINER_CHANNELS) && is_trainer_connected()) {
+    return trainerInput[channel] * 2;
   }
 
   LimitData * lim = limitAddress(channel);
@@ -360,6 +362,9 @@ getvalue_t getValue(mixsrc_t i, bool* valid)
   }
 #endif
 
+  else if (i == MIXSRC_MIN) {
+    return -RESX;
+  }
   else if (i == MIXSRC_MAX) {
     return RESX;
   }
@@ -407,7 +412,7 @@ getvalue_t getValue(mixsrc_t i, bool* valid)
   else if (i <= MIXSRC_LAST_LOGICAL_SWITCH) {
     return getSwitch(SWSRC_FIRST_LOGICAL_SWITCH + i - MIXSRC_FIRST_LOGICAL_SWITCH) ? 1024 : -1024;
   } else if (i <= MIXSRC_LAST_TRAINER) {
-    int16_t x = ppmInput[i - MIXSRC_FIRST_TRAINER];
+    int16_t x = trainerInput[i - MIXSRC_FIRST_TRAINER];
     if (i < MIXSRC_FIRST_TRAINER + NUM_CAL_PPM) {
       x -= g_eeGeneral.trainer.calib[i - MIXSRC_FIRST_TRAINER];
     }
@@ -568,13 +573,13 @@ void evalInputs(uint8_t mode)
 
       if (mode <= e_perout_mode_inactive_flight_mode &&
           isFunctionActive(FUNCTION_TRAINER_STICK1 + ch) &&
-          IS_TRAINER_INPUT_VALID()) {
+          is_trainer_connected()) {
         // trainer mode
         TrainerMix* td = &g_eeGeneral.trainer.mix[ch];
         if (td->mode) {
           uint8_t chStud = td->srcChn;
           int32_t vStud =
-              (ppmInput[chStud] - g_eeGeneral.trainer.calib[chStud]);
+              (trainerInput[chStud] - g_eeGeneral.trainer.calib[chStud]);
           vStud *= td->studWeight;
           vStud /= 50;
           switch (td->mode) {
@@ -762,7 +767,7 @@ void evalFlightModeMixes(uint8_t mode, uint8_t tick10ms)
 
 #define MIXER_LINE_DISABLE()   (mixCondition = true, mixEnabled = 0)
 
-      if (mixEnabled && md->srcRaw >= MIXSRC_FIRST_TRAINER && md->srcRaw <= MIXSRC_LAST_TRAINER && !IS_TRAINER_INPUT_VALID()) {
+      if (mixEnabled && md->srcRaw >= MIXSRC_FIRST_TRAINER && md->srcRaw <= MIXSRC_LAST_TRAINER && !is_trainer_connected()) {
         MIXER_LINE_DISABLE();
       }
 
@@ -1067,7 +1072,7 @@ void evalMixes(uint8_t tick10ms)
   // must be done before limits because of the applyLimit function: it checks for safety switches which would be not initialized otherwise
   if (tick10ms) {
     requiredSpeakerVolume = g_eeGeneral.speakerVolume + VOLUME_LEVEL_DEF;
-    requiredBacklightBright = g_eeGeneral.backlightBright;
+    requiredBacklightBright = g_eeGeneral.getBrightness();
 
     if (radioGFEnabled()) {
       evalFunctions(g_eeGeneral.customFn, globalFunctionsContext);

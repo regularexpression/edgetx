@@ -19,6 +19,16 @@ SWITCH_CONFIG = {
         "SB": {"default": "3POS",   "display": [1, 0]},
         "SD": {"default": "2POS",   "display": [1, 1]}
     },
+    "el18": {
+        "SA": { "default": "2POS"   },
+        "SB": { "default": "3POS"   },
+        "SC": { "default": "3POS"   },
+        "SD": { "default": "2POS"   },
+        "SE": { "default": "2POS"   },
+        "SF": { "default": "3POS"   },
+        "SG": { "default": "3POS"   },
+        "SH": { "default": "TOGGLE" }
+    },
     "lr3pro": {
         # left side
         "SA": {"default": "3POS",   "display": [0, 0]},
@@ -323,6 +333,15 @@ SWITCH_CONFIG = {
         "SD": {"default": "TOGGLE", "display": [1, 1]},
         "SF": {"default": "2POS",   "display": [1, 2]},
         "SH": {"default": "TOGGLE", "display": [1, 3]},
+    },
+    "pocket": {
+        # left side
+        "SA": { "default": "2POS", "display": [ 0, 0 ] },
+        "SB": { "default": "3POS",   "display": [ 0, 1 ] },
+        "SE": { "default": "TOGGLE",   "display": [ 0, 2 ] },
+        # right side
+        "SD": { "default": "2POS",   "display": [ 1, 0 ] },
+        "SC": { "default": "3POS", "display": [ 1, 1 ] },
     },
 }
 

@@ -21,11 +21,13 @@
 
 #include "opentx.h"
 #include "hal/adc_driver.h"
+#include "hal/storage.h"
 
 #if defined(LIBOPENUI)
   #include "libopenui.h"
   #include "gui/colorlcd/LvglWrapper.h"
   #include "gui/colorlcd/view_main.h"
+  #include "theme.h"
 #endif
 
 #if defined(CLI)

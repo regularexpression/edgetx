@@ -26,6 +26,7 @@
 #include "menu_screen.h"
 #include "topbar_impl.h"
 #include "view_main_menu.h"
+#include "theme.h"
 
 #include "opentx.h"
 
@@ -84,7 +85,7 @@ ViewMain::ViewMain():
   lv_obj_add_event_cb(lvobj, ViewMain::long_pressed, LV_EVENT_LONG_PRESSED, nullptr);
   
   // create last to be on top
-  topbar = dynamic_cast<TopbarImpl*>(TopbarFactory::create(this));
+  topbar = TopbarFactory::create(this);
 }
 
 ViewMain::~ViewMain()
@@ -167,7 +168,7 @@ void ViewMain::previousMainView()
   saveViewId(view);
 }
 
-Topbar* ViewMain::getTopbar()
+TopBar* ViewMain::getTopbar()
 {
   return topbar;
 }

@@ -21,14 +21,23 @@
 
 #include <stdio.h>
 #include <stdint.h>
+
+#include "hal/fatfs_diskio.h"
+#include "hal/storage.h"
+
 #include "opentx.h"
-#include "diskio.h"
 
 #if defined(LIBOPENUI)
   #include "libopenui.h"
 #else
   #include "libopenui/src/libopenui_file.h"
 #endif
+
+#if FF_MAX_SS != FF_MIN_SS
+#error "Variable sector size is not supported"
+#endif
+
+#define BLOCK_SIZE FF_MAX_SS
 
 #define SDCARD_MIN_FREE_SPACE_MB 50 // Maintain a 50MB free space buffer to prevent crashes
 
@@ -451,6 +460,13 @@ uint32_t sdGetFreeSectors()
   return nofree * fat->csize;
 }
 
+uint32_t sdGetFreeKB()
+{
+  return sdGetFreeSectors() * (1024 / BLOCK_SIZE);
+}
+
+bool sdIsFull() { return sdGetFreeKB() < SDCARD_MIN_FREE_SPACE_MB * 1024; }
+
 #else  // #if !defined(SIMU) || defined(SIMU_DISKIO)
 
 uint32_t sdGetNoSectors()
@@ -465,7 +481,91 @@ uint32_t sdGetSize()
 
 uint32_t sdGetFreeSectors()
 {
-  return ((SDCARD_MIN_FREE_SPACE_MB*1024*1024)/BLOCK_SIZE)+1;    // SIMU SD card is always above threshold
+  // SIMU SD card is always above threshold
+  return ((SDCARD_MIN_FREE_SPACE_MB*1024*1024)/BLOCK_SIZE)+1;
 }
 
+uint32_t sdGetFreeKB() { return SDCARD_MIN_FREE_SPACE_MB * 1024 + 1; }
+bool sdIsFull() { return false; }
+
 #endif  // #if !defined(SIMU) || defined(SIMU_DISKIO)
+
+
+static bool _g_FATFS_init = false;
+static FATFS g_FATFS_Obj __DMA; // this is in uninitialised section !!!
+
+#if defined(LOG_TELEMETRY)
+FIL g_telemetryFile = {};
+#endif
+
+#if defined(LOG_BLUETOOTH)
+FIL g_bluetoothFile = {};
+#endif
+
+#include "audio.h"
+#include "sdcard.h"
+
+void sdInit()
+{
+  TRACE("sdInit");
+  storageInit();
+  sdMount();
+}
+
+void sdMount()
+{
+  TRACE("sdMount");
+
+  storagePreMountHook();
+  
+  if (f_mount(&g_FATFS_Obj, "", 1) == FR_OK) {
+    // call sdGetFreeSectors() now because f_getfree() takes a long time first time it's called
+    _g_FATFS_init = true;
+    sdGetFreeSectors();
+
+#if defined(LOG_TELEMETRY)
+    f_open(&g_telemetryFile, LOGS_PATH "/telemetry.log", FA_OPEN_ALWAYS | FA_WRITE);
+    if (f_size(&g_telemetryFile) > 0) {
+      f_lseek(&g_telemetryFile, f_size(&g_telemetryFile)); // append
+    }
+#endif
+
+#if defined(LOG_BLUETOOTH)
+    f_open(&g_bluetoothFile, LOGS_PATH "/bluetooth.log", FA_OPEN_ALWAYS | FA_WRITE);
+    if (f_size(&g_bluetoothFile) > 0) {
+      f_lseek(&g_bluetoothFile, f_size(&g_bluetoothFile)); // append
+    }
+#endif
+  }
+  else {
+    TRACE("f_mount() failed");
+  }
+}
+
+void sdDone()
+{
+  TRACE("sdDone");
+  
+  if (sdMounted()) {
+    audioQueue.stopSD();
+
+#if defined(LOG_TELEMETRY)
+    f_close(&g_telemetryFile);
+#endif
+
+#if defined(LOG_BLUETOOTH)
+    f_close(&g_bluetoothFile);
+#endif
+
+    f_mount(nullptr, "", 0); // unmount SD
+  }
+}
+
+uint32_t sdMounted()
+{
+#if defined(SIMU)
+  return true;
+#else
+  return _g_FATFS_init && (g_FATFS_Obj.fs_type != 0);
+#endif
+}

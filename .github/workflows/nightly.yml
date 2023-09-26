@@ -18,12 +18,12 @@ jobs:
     strategy:
       matrix:
         target:
-          - nv14
+          - nv14;el18
           - t12
           - t16
           - t18
-          - t8;zorro;commando8
-          - tlite;tlitef4;tpro;tprov2;lr3pro
+          - t8;zorro;pocket;commando8
+          - tlite;tpro;tprov2;lr3pro
           - t20
           - tx12;tx12mk2;boxer
           - tx16s

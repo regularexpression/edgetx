@@ -21,12 +21,21 @@
 
 /* Includes ------------------------------------------------------------------*/
 
-#include "FatFs/diskio.h"
+#include "hal/fatfs_diskio.h"
+#include "hal/storage.h"
+
 #include "fw_version.h"
 #include "board.h"
 #include "debug.h"
 
 #include <string.h>
+
+
+#if FF_MAX_SS != FF_MIN_SS
+#error "Variable sector size is not supported"
+#endif
+
+#define BLOCK_SIZE FF_MAX_SS
 
 #if !defined(BOOT)
   #include "timers_driver.h"
@@ -174,14 +183,14 @@ int8_t STORAGE_GetCapacity (uint8_t lun, uint32_t *block_num, uint32_t *block_si
 
   static DWORD sector_count = 0;
   if (sector_count == 0) {
-    if (disk_ioctl(0, GET_SECTOR_COUNT, &sector_count) != RES_OK) {
+    auto drv = storageGetDefaultDriver();
+    if (drv->ioctl(0, GET_SECTOR_COUNT, &sector_count) != RES_OK) {
       sector_count = 0;
       return -1;
     }
   }
 
   *block_num  = sector_count;
-
   return 0;
 }
 
@@ -207,7 +216,8 @@ int8_t  STORAGE_IsReady (uint8_t lun)
     return (lunReady[STORAGE_EEPROM_LUN] != 0) ? 0 : -1;
   }
 #endif
-  return (lunReady[STORAGE_SDCARD_LUN] != 0 && SD_CARD_PRESENT()) ? 0 : -1;
+  // return (lunReady[STORAGE_SDCARD_LUN] != 0 && SD_CARD_PRESENT()) ? 0 : -1;
+  return 0; // debug: "always ON"
 }
 
 /**
@@ -217,7 +227,7 @@ int8_t  STORAGE_IsReady (uint8_t lun)
   */
 int8_t  STORAGE_IsWriteProtected (uint8_t lun)
 {
-  return  0;
+  return 0;
 }
 
 /**
@@ -242,8 +252,8 @@ int8_t STORAGE_Read (uint8_t lun,
   }
 #endif
 
-  // read without cache
-  return (__disk_read(0, buf, blk_addr, blk_len) == RES_OK) ? 0 : -1;
+  auto drv = storageGetDefaultDriver();
+  return (drv->read(0, buf, blk_addr, blk_len) == RES_OK) ? 0 : -1;
 }
 /**
   * @brief  Write data to the medium
@@ -267,8 +277,8 @@ int8_t STORAGE_Write (uint8_t lun,
   }
 #endif
 
-  // write without cache
-  return (__disk_write(0, buf, blk_addr, blk_len) == RES_OK) ? 0 : -1;
+  auto drv = storageGetDefaultDriver();
+  return (drv->write(0, buf, blk_addr, blk_len) == RES_OK) ? 0 : -1;
 }
 
 /**

@@ -455,7 +455,7 @@ PACK(struct PpmModule {
 });
 
 PACK(struct ModuleData {
-  uint8_t type ENUM(ModuleType);
+  uint8_t type ENUM(ModuleType) CUST(r_moduleType, w_moduleType);
   CUST_ATTR(subType,r_modSubtype,w_modSubtype);
   uint8_t channelsStart;
   int8_t  channelsCount CUST(r_channelsCount,w_channelsCount); // 0=8 channels
@@ -678,7 +678,8 @@ PACK(struct ModelData {
   uint8_t   enableCustomThrottleWarning:1;
   uint8_t   disableTelemetryWarning:1;
   uint8_t   showInstanceIds:1;
-  uint8_t   spare3:5 SKIP;
+  uint8_t   checklistInteractive:1;
+  uint8_t   spare3:4 SKIP;  // padding to 8-bit aligment
   int8_t    customThrottleWarningPosition;
   BeepANACenter beepANACenter;
   MixData   mixData[MAX_MIXERS] NO_IDX;
@@ -759,10 +760,10 @@ PACK(struct ModelData {
     }
   }
 
-  uint8_t usbJoystickExtMode:1;
-  uint8_t usbJoystickIfMode:3 ENUM(USBJoystickIfMode);
-  uint8_t usbJoystickCircularCut:4;
-  USBJoystickChData usbJoystickCh[USBJ_MAX_JOYSTICK_CHANNELS];
+  NOBACKUP(uint8_t usbJoystickExtMode:1);
+  NOBACKUP(uint8_t usbJoystickIfMode:3 ENUM(USBJoystickIfMode));
+  NOBACKUP(uint8_t usbJoystickCircularCut:4);
+  NOBACKUP(USBJoystickChData usbJoystickCh[USBJ_MAX_JOYSTICK_CHANNELS]);
   
   // Radio level tabs control (model settings)
 #if defined(COLORLCD)
@@ -827,16 +828,6 @@ PACK(struct TrainerData {
   #define EXTRA_GENERAL_FIELDS \
     uint8_t  backlightColor; \
     BLUETOOTH_FIELDS
-#endif
-
-#if defined(COLORLCD) && !defined(BACKUP)
-  #include "theme.h"
-  #define THEME_NAME_LEN 8
-  #define THEME_DATA \
-    NOBACKUP(char themeName[THEME_NAME_LEN]); \
-    NOBACKUP(EdgeTxTheme::PersistentData themeData);
-#else
-  #define THEME_DATA
 #endif
 
 #if defined(BUZZER)
@@ -933,8 +924,6 @@ PACK(struct RadioData {
 
   EXTRA_GENERAL_FIELDS
 
-  THEME_DATA
-
   char ownerRegistrationID[PXX2_LEN_REGISTRATION_ID];
 
   CUST_ATTR(rotEncDirection, r_rotEncDirection, nullptr);
@@ -974,6 +963,15 @@ PACK(struct RadioData {
   uint8_t modelSFDisabled:1;
   uint8_t modelCustomScriptsDisabled:1;
   uint8_t modelTelemetryDisabled:1;
+
+  NOBACKUP(uint8_t getBrightness() const
+  {
+#if defined(OLED_SCREEN)
+    return contrast;
+#else
+    return backlightBright;
+#endif
+  });
 });
 
 #undef SWITCHES_WARNING_DATA
@@ -982,5 +980,4 @@ PACK(struct RadioData {
 #undef SCRIPTS_DATA
 #undef CUSTOM_SCREENS_DATA
 #undef EXTRA_GENERAL_FIELDS
-#undef THEME_DATA
 #undef NOBACKUP

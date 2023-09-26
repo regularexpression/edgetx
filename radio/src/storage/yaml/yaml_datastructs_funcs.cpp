@@ -224,6 +224,26 @@ static uint32_t r_mixSrcRaw(const YamlNode* node, const char* val, uint8_t val_l
 
       return MIXSRC_FIRST_HELI + (val[3] - '1');
 
+    } else if (val_len > 3 &&
+               val[0] == 'T' &&
+               val[1] == 'm' &&
+               val[2] == 'r' &&
+               val[3] >= '1' &&
+               val[3] <= ('1' + MAX_TIMERS)) {
+
+      return MIXSRC_FIRST_TIMER + (val[3] - '1');
+
+    } else if (val_len > 5 &&    // Old form, removed in 2.10
+               val[0] == 'T' &&
+               val[1] == 'I' &&
+               val[2] == 'M' &&
+               val[3] == 'E' &&
+               val[4] == 'R' &&
+               val[5] >= '1' &&
+               val[5] <= ('1' + MAX_TIMERS)) {
+
+      return MIXSRC_FIRST_TIMER + (val[5] - '1');
+
     } else if (val_len > 1 &&
                val[0] == 'T' &&
                val[1] >= '1' &&
@@ -345,6 +365,11 @@ static bool w_mixSrcRaw(const YamlNode* node, uint32_t val, yaml_writer_func wf,
         if (!output_source_1_param("gv(", 3, val, wf, opaque))
           return false;
         str = closing_parenthesis;
+    }
+    else if (val >= MIXSRC_FIRST_TIMER
+             && val <= MIXSRC_LAST_TIMER) {
+        if (!wf(opaque, "Tmr", 3)) return false;
+        str = yaml_unsigned2str(val - MIXSRC_FIRST_TIMER + 1);
     }
     else if (val >= MIXSRC_FIRST_TELEM
              && val <= MIXSRC_LAST_TELEM) {
@@ -506,9 +531,10 @@ static uint8_t select_mod_type(void* user, uint8_t* data, uint32_t bitoffs)
     case MODULE_TYPE_R9M_LITE_PRO_PXX2:
     case MODULE_TYPE_XJT_LITE_PXX2:
       return 5;
-    case MODULE_TYPE_FLYSKY:
-      if (mod_data->subType == FLYSKY_SUBTYPE_AFHDS2A) return 6;
-      if (mod_data->subType == FLYSKY_SUBTYPE_AFHDS3) return 7;
+    case MODULE_TYPE_FLYSKY_AFHDS2A:
+      return 6;
+    case MODULE_TYPE_FLYSKY_AFHDS3:
+      return 7;
       break;
     case MODULE_TYPE_GHOST:
       return 8;
@@ -819,6 +845,7 @@ static uint32_t r_swtchSrc(const YamlNode* node, const char* val, uint8_t val_le
         && val[3] >= '0' && val[3] <= '2') {
 
       ival = switchLookupIdx(val, val_len - 1) * 3;
+      if (ival < 0) return SWSRC_NONE;
       ival += yaml_str2int(val + 3, val_len - 2);
       ival += SWSRC_FIRST_SWITCH;
       
@@ -827,6 +854,7 @@ static uint32_t r_swtchSrc(const YamlNode* node, const char* val, uint8_t val_le
         && val[2] >= '0' && val[2] <= '2') {
 
       ival = switchLookupIdx(val, val_len - 1) * 3;
+      if (ival < 0) return SWSRC_NONE;
       ival += yaml_str2int(val + 2, val_len - 2);
       ival += SWSRC_FIRST_SWITCH;
       
@@ -849,7 +877,7 @@ static uint32_t r_swtchSrc(const YamlNode* node, const char* val, uint8_t val_le
     }
     else if (val_len > 4 && (strncmp(val, trimSwitchNames[0], 4) == 0)) {
 
-      for (int i = 0; i < sizeof(trimSwitchNames)/sizeof(const char*); i += 1) {
+      for (size_t i = 0; i < sizeof(trimSwitchNames)/sizeof(const char*); i += 1) {
         if (strncmp(val, trimSwitchNames[i], val_len) == 0) {
           ival = SWSRC_FIRST_TRIM + i;
           break;
@@ -1415,7 +1443,7 @@ static void r_customFn(void* user, uint8_t* data, uint32_t bitoffs,
         && val[1] == 'm'
         && val[2] == 'r'
         && val[3] >= '1'
-        && val[3] <= '3') {
+        && val[3] <= ('1' + MAX_TIMERS)) {
 
       CFN_TIMER_INDEX(cfn) = val[3] - '1';
 
@@ -1863,6 +1891,28 @@ static bool w_thrSrc(const YamlNode* node, uint32_t val, yaml_writer_func wf,
   return w_mixSrcRaw(nullptr, src, wf, opaque);
 }
 
+extern const struct YamlIdStr enum_ModuleType[];
+
+static const struct YamlIdStr enum_old_ModuleType[] = {
+  { MODULE_TYPE_FLYSKY_AFHDS2A, "TYPE_FLYSKY" },
+  { 0, NULL  }
+};
+
+static uint32_t r_moduleType(const YamlNode* node, const char* val, uint8_t val_len)
+{
+  uint32_t type = yaml_parse_enum(enum_ModuleType, val, val_len);
+  if (!type && val_len > 0) {
+    type = yaml_parse_enum(enum_old_ModuleType, val, val_len);
+  }
+  return type;
+}
+
+bool w_moduleType(const YamlNode* node, uint32_t val, yaml_writer_func wf, void* opaque)
+{
+  const char* str = yaml_output_enum(val, enum_ModuleType);
+  return str ? wf(opaque, str, strlen(str)) : true;
+}
+
 static const struct YamlIdStr enum_XJT_Subtypes[] = {
   { MODULE_SUBTYPE_PXX1_ACCST_D16, "D16" },
   { MODULE_SUBTYPE_PXX1_ACCST_D8, "D8" },
@@ -1887,9 +1937,11 @@ static const struct YamlIdStr enum_R9M_Subtypes[] = {
   { 0, NULL  }
 };
 
+enum ModuleSubtypeFlysky { FLYSKY_SUBTYPE_AFHDS3 = 0, FLYSKY_SUBTYPE_AFHDS2A };
+
 static const struct YamlIdStr enum_FLYSKY_Subtypes[] = {
-  { FLYSKY_SUBTYPE_AFHDS3, "AFHDS3" },
   { FLYSKY_SUBTYPE_AFHDS2A, "AFHDS2A" },
+  { FLYSKY_SUBTYPE_AFHDS3, "AFHDS3" },
   { 0, NULL  }
 };
 
@@ -1919,8 +1971,11 @@ static void r_modSubtype(void* user, uint8_t* data, uint32_t bitoffs,
     md->subType = yaml_parse_enum(enum_ISRM_Subtypes, val, val_len);
   } else if (isModuleTypeR9MNonAccess(md->type)) {
     md->subType = yaml_parse_enum(enum_R9M_Subtypes, val, val_len);
-  } else if (md->type == MODULE_TYPE_FLYSKY) {
-    md->subType = yaml_parse_enum(enum_FLYSKY_Subtypes, val, val_len);
+  } else if (md->type == MODULE_TYPE_FLYSKY_AFHDS2A) {
+    // Flysky sub-types have been converted into separate module types
+    auto sub_type = yaml_parse_enum(enum_FLYSKY_Subtypes, val, val_len);
+    if (sub_type == FLYSKY_SUBTYPE_AFHDS3)
+      md->type = MODULE_TYPE_FLYSKY_AFHDS3;
   } else if (md->type == MODULE_TYPE_MULTIMODULE) {
 #if defined(MULTIMODULE)
     // Read type/subType by the book (see MPM documentation)
@@ -1977,8 +2032,6 @@ static bool w_modSubtype(void* user, uint8_t* data, uint32_t bitoffs,
     str = yaml_output_enum(val, enum_ISRM_Subtypes);
   } else if (md->type == MODULE_TYPE_R9M_PXX1 || md->type == MODULE_TYPE_R9M_LITE_PXX1) {
     str = yaml_output_enum(val, enum_R9M_Subtypes);
-  } else if (md->type == MODULE_TYPE_FLYSKY) {
-    str = yaml_output_enum(val, enum_FLYSKY_Subtypes);
   } else if (md->type == MODULE_TYPE_MULTIMODULE) {
 #if defined(MULTIMODULE)
     // Use type/subType by the book (see MPM documentation)
@@ -2109,7 +2162,7 @@ static void r_serialMode(void* user, uint8_t* data, uint32_t bitoffs,
   auto tw = reinterpret_cast<YamlTreeWalker*>(user);
 
   auto node = tw->getAttr();
-  if (!node || node->tag_len < 4) return;
+  if (!node || node->tag_len() < 4) return;
 
   uint8_t port_nr;
   if (node->tag[3] == 'S')

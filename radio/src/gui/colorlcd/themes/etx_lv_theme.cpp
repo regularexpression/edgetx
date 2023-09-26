@@ -82,7 +82,7 @@ typedef struct {
   // Choice
   lv_style_t choice_main;
 
-  // Checkbox
+  // Toggle switch
   lv_style_t switch_knob;
 
   // Table
@@ -103,6 +103,12 @@ typedef struct {
   lv_style_t progress_main;
   lv_style_t progress_indicator;
 
+  // Check Box
+  lv_style_t cb_marker;
+  lv_style_t cb_marker_checked;
+
+  // Bubble popup
+  lv_style_t bubble_popup;
 } my_theme_styles_t;
 
 /**********************
@@ -237,7 +243,7 @@ static void style_init(void)
     lv_style_init(&styles.bg_color_transparent);
     lv_style_set_bg_opa(&styles.bg_color_transparent, LV_OPA_TRANSP);
 
-    // Checkbox and slider knob rounding
+    // Toggle switch and slider knob rounding
     lv_style_init(&styles.circle);
     lv_style_set_radius(&styles.circle, LV_RADIUS_CIRCLE);
 
@@ -265,7 +271,7 @@ static void style_init(void)
     lv_style_init(&styles.anim_fast);
     lv_style_set_anim_time(&styles.anim_fast, 120);
 
-    // Checkbox
+    // Toggle switch
     lv_style_init(&styles.switch_knob);
     lv_style_set_pad_all(&styles.switch_knob, -3);
     lv_style_set_bg_opa(&styles.switch_knob, LV_OPA_100);
@@ -315,6 +321,22 @@ static void style_init(void)
     // Text align
     lv_style_init(&styles.text_align_right);
     lv_style_set_text_align(&styles.text_align_right, LV_TEXT_ALIGN_RIGHT);
+
+    // Check Box
+    lv_style_init(&styles.cb_marker);
+    lv_style_set_bg_opa(&styles.cb_marker, LV_OPA_COVER);
+    lv_style_set_pad_all(&styles.cb_marker, lv_disp_dpx(theme.disp, 3));
+    lv_style_init(&styles.cb_marker_checked);
+    lv_style_set_bg_img_src(&styles.cb_marker_checked, LV_SYMBOL_OK);
+    lv_style_set_text_font(&styles.cb_marker_checked, theme.font_small);
+
+    // Bubble popup
+    lv_style_init(&styles.bubble_popup);
+    lv_style_set_bg_opa(&styles.bubble_popup, LV_OPA_COVER);
+    lv_style_set_pad_all(&styles.bubble_popup, 4);
+    lv_style_set_border_opa(&styles.bubble_popup, LV_OPA_COVER);
+    lv_style_set_border_width(&styles.bubble_popup, 3);
+    lv_style_set_radius(&styles.bubble_popup, 10);
   }
 
   // Always update colors in case theme changes
@@ -377,6 +399,16 @@ static void style_init(void)
 
   lv_style_set_bg_color(&styles.progress_main, makeLvColor(COLOR_THEME_SECONDARY2));
   lv_style_set_bg_color(&styles.progress_indicator, makeLvColor(COLOR_THEME_SECONDARY1));
+
+  lv_style_set_border_color(&styles.cb_marker, makeLvColor(COLOR_THEME_SECONDARY2));
+  lv_style_set_bg_color(&styles.cb_marker, makeLvColor(COLOR_THEME_PRIMARY2));
+  lv_style_set_border_color(&styles.cb_marker_checked, makeLvColor(COLOR_THEME_SECONDARY1));
+  lv_style_set_bg_color(&styles.cb_marker_checked, makeLvColor(COLOR_THEME_SECONDARY1));
+  lv_style_set_text_color(&styles.cb_marker_checked, makeLvColor(COLOR_THEME_PRIMARY2));
+
+  lv_style_set_bg_color(&styles.bubble_popup, makeLvColor(COLOR2FLAGS(WHITE)));
+  lv_style_set_border_color(&styles.bubble_popup, makeLvColor(COLOR2FLAGS(BLACK)));
+  lv_style_set_text_color(&styles.bubble_popup, makeLvColor(COLOR2FLAGS(BLACK)));
 }
 
 /**********************
@@ -479,6 +511,7 @@ void table_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
   lv_obj_add_style(obj, &styles.pad_small, LV_PART_ITEMS);
   lv_obj_add_style(obj, &styles.pressed, LV_PART_ITEMS | LV_STATE_PRESSED);
   lv_obj_add_style(obj, &styles.bg_color_focus, LV_PART_ITEMS | LV_STATE_EDITED);
+  lv_obj_set_style_pad_ver(obj, 7, LV_PART_ITEMS);
 }
 
 void etx_keyboard_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
@@ -523,6 +556,9 @@ void etx_slider_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
   lv_obj_add_style(obj, &styles.circle, LV_PART_KNOB);
   lv_obj_add_style(obj, &styles.bg_color_focus, LV_PART_MAIN | LV_STATE_FOCUSED);
   lv_obj_add_style(obj, &styles.bg_color_focus, LV_PART_MAIN | LV_STATE_FOCUSED | LV_STATE_EDITED);
+  lv_obj_add_style(obj, &styles.bg_color_focus, LV_PART_INDICATOR | LV_STATE_FOCUSED);
+  lv_obj_add_style(obj, &styles.bg_color_focus, LV_PART_INDICATOR | LV_STATE_FOCUSED | LV_STATE_EDITED);
+  lv_obj_add_style(obj, &styles.bg_color_edit, LV_PART_KNOB | LV_STATE_FOCUSED | LV_STATE_EDITED);
 }
 
 void etx_btnmatrix_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
@@ -564,6 +600,22 @@ void etx_bar_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
   lv_obj_add_style(obj, &styles.progress_indicator, LV_PART_INDICATOR);
   lv_obj_add_style(obj, &styles.rounded, LV_PART_MAIN);
   lv_obj_add_style(obj, &styles.rounded, LV_PART_INDICATOR);
+}
+
+void etx_checkbox_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+{
+  lv_obj_add_style(obj, &styles.rounded, LV_PART_INDICATOR);
+  lv_obj_add_style(obj, &styles.pad_zero, LV_PART_INDICATOR);
+  lv_obj_add_style(obj, &styles.cb_marker, LV_PART_INDICATOR);
+  lv_obj_add_style(obj, &styles.cb_marker_checked, LV_PART_INDICATOR | LV_STATE_CHECKED);
+  lv_obj_add_style(obj, &styles.border, LV_PART_INDICATOR);
+  lv_obj_add_style(obj, &styles.focussed, LV_PART_INDICATOR | LV_STATE_FOCUSED);
+  lv_obj_add_style(obj, &styles.disabled, LV_PART_INDICATOR | LV_STATE_DISABLED);
+}
+
+void bubble_popup_constructor(const lv_obj_class_t * class_p, lv_obj_t * obj)
+{
+  lv_obj_add_style(obj, &styles.bubble_popup, 0);
 }
 
 }
@@ -725,19 +777,6 @@ const lv_obj_class_t etx_button_class = {
     .instance_size = sizeof(lv_btn_t),
 };
 
-const lv_obj_class_t etx_vbutton_class = {
-    .base_class = &lv_btn_class,
-    .constructor_cb = etx_button_constructor,
-    .destructor_cb = nullptr,
-    .user_data = nullptr,
-    .event_cb = nullptr,
-    .width_def = LV_SIZE_CONTENT,
-    .height_def = LV_SIZE_CONTENT,
-    .editable = LV_OBJ_CLASS_EDITABLE_INHERIT,
-    .group_def = LV_OBJ_CLASS_GROUP_DEF_TRUE,
-    .instance_size = sizeof(lv_btn_t),
-};
-
 const lv_obj_class_t etx_choice_class = {
     .base_class = &lv_obj_class,
     .constructor_cb = etx_choice_constructor,
@@ -762,6 +801,32 @@ const lv_obj_class_t etx_bar_class = {
     .editable = LV_OBJ_CLASS_EDITABLE_INHERIT,
     .group_def = LV_OBJ_CLASS_GROUP_DEF_INHERIT,
     .instance_size = sizeof(lv_bar_t),
+};
+
+const lv_obj_class_t etx_checkbox_class = {
+    .base_class = &lv_checkbox_class,
+    .constructor_cb = etx_checkbox_constructor,
+    .destructor_cb = nullptr,
+    .user_data = nullptr,
+    .event_cb = nullptr,
+    .width_def = lv_pct(100),
+    .height_def = lv_pct(100),
+    .editable = LV_OBJ_CLASS_EDITABLE_INHERIT,
+    .group_def = LV_OBJ_CLASS_GROUP_DEF_INHERIT,
+    .instance_size = sizeof(lv_checkbox_t),
+};
+
+const lv_obj_class_t etx_bubble_popup_class = {
+    .base_class = &window_base_class,
+    .constructor_cb = bubble_popup_constructor,
+    .destructor_cb = nullptr,
+    .user_data = nullptr,
+    .event_cb = nullptr,
+    .width_def = LV_DPI_DEF,
+    .height_def = LV_DPI_DEF,
+    .editable = LV_OBJ_CLASS_EDITABLE_FALSE,
+    .group_def = LV_OBJ_CLASS_GROUP_DEF_FALSE,
+    .instance_size = sizeof(lv_obj_t)
 };
 
 // Event handlers
@@ -876,20 +941,24 @@ lv_obj_t* etx_button_create(lv_obj_t* parent)
   return etx_create(&etx_button_class, parent);
 }
 
-// Variable height
-lv_obj_t* etx_vbutton_create(lv_obj_t* parent)
-{
-  return etx_create(&etx_vbutton_class, parent);
-}
-
 lv_obj_t* etx_choice_create(lv_obj_t* parent)
 {
   return etx_create(&etx_choice_class, parent);
 }
 
+lv_obj_t* etx_bubble_popup_create(lv_obj_t* parent)
+{
+  return etx_create(&etx_bubble_popup_class, parent);
+}
+
 lv_obj_t* etx_bar_create(lv_obj_t* parent)
 {
   return etx_create(&etx_bar_class, parent);
+}
+
+lv_obj_t* etx_checkbox_create(lv_obj_t* parent)
+{
+  return etx_create(&etx_checkbox_class, parent);
 }
 
 lv_obj_t* etx_modal_create(lv_obj_t* parent)

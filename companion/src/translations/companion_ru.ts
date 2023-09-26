@@ -2061,6 +2061,11 @@ Do you want to import settings from a file?</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../firmwares/customfunctiondata.cpp" line="129"/>
+        <source>Audio Amp Off</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
         <location filename="../firmwares/customfunctiondata.cpp" line="216"/>
         <source>Played once, not during startup</source>
         <translation type="unfinished"></translation>
@@ -11252,6 +11257,11 @@ s</source>
     </message>
     <message>
         <location filename="../firmwares/rawsource.cpp" line="190"/>
+        <source>MIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firmwares/rawsource.cpp" line="193"/>
         <source>MAX</source>
         <translation type="unfinished"></translation>
     </message>

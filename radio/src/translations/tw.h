@@ -56,7 +56,6 @@
 #define TR_COUNTRY_CODES                "美國","日本","歐洲"
 #define TR_USBMODES                     "詢問","遊戲柄","U盤","串行"
 #define TR_JACK_MODES                   "詢問","音頻","教練"
-#define TR_TELEMETRY_PROTOCOLS          "FrSky S.PORT","FrSky D","FrSky D (cable)","TBS Crossfire","Spektrum","AFHDS2A IBUS","Multi Telemetry"
 
 #define TR_SBUS_INVERSION_VALUES       "normal","not inverted"
 #define TR_MULTI_CUSTOM                "自定義"
@@ -115,6 +114,7 @@
 #define TR_SF_SCREENSHOT               "截屏"
 #define TR_SF_RACING_MODE              "競速模式"
 #define TR_SF_DISABLE_TOUCH            "禁用觸摸"
+#define TR_SF_DISABLE_AUDIO_AMP        "關閉音頻功放"
 #define TR_SF_SET_SCREEN               "選擇主屏"
 
 #define TR_FSW_RESET_TELEM             "回傳參數"
@@ -428,7 +428,11 @@
 #define TR_PPM_TRAINER                 "TR"
 #define TR_CH                          "CH"
 #define TR_MODEL                       "模型"
+#if defined(SURFACE_RADIO)
+#define TR_FM                          "DM"
+#else
 #define TR_FM                          "FM"
+#else
 #define TR_EEPROMLOWMEM                "EEPROM low mem"
 #define TR_PRESS_ANY_KEY_TO_SKIP       "按任意鍵跳過"
 #define TR_THROTTLE_NOT_IDLE           "請將油門拉至最低!"
@@ -904,6 +908,7 @@
 #define TR_PREFLIGHT_POTSLIDER_CHECK   "關閉","開啟","自動"
 #define TR_PREFLIGHT                   "初始位置檢查"
 #define TR_CHECKLIST                   TR(INDENT "顯示列表", INDENT "顯示列表")
+#define TR_CHECKLIST_INTERACTIVE       TR3(INDENT "C-Interact", INDENT "Interact. checklist", INDENT "Interactive checklist")
 #define TR_AUX_SERIAL_MODE             "端口"
 #define TR_AUX2_SERIAL_MODE            "端口 2"
 #define TR_AUX_SERIAL_PORT_POWER       "端口供電"
@@ -959,6 +964,7 @@
   #define TR_TIMER_SOURCE              "計時器選擇"
   #define TR_SIZE                      "尺寸"
   #define TR_SHADOW                    "陰影"
+  #define TR_ALIGNMENT                 "對齊"
   #define TR_ALIGN_LABEL               "对齐名称"
   #define TR_ALIGN_VALUE               "对齐值"
   #define TR_ALIGN_OPTS                { "左", "中", "右" }
@@ -1096,6 +1102,7 @@
 #define TR_MENU_LUA                     STR_CHAR_LUA "LUA腳本"
 #define TR_MENU_STICKS                  STR_CHAR_STICK "搖桿"
 #define TR_MENU_POTS                    STR_CHAR_POT "旋鈕"
+#define TR_MENU_MIN                     STR_CHAR_FUNCTION "固定值MIN"
 #define TR_MENU_MAX                     STR_CHAR_FUNCTION "固定值MAX"
 #define TR_MENU_HELI                    STR_CHAR_CYC "斜盤混控CYC"
 #define TR_MENU_TRIMS                   STR_CHAR_TRIM "微調"

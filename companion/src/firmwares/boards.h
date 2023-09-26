@@ -26,6 +26,7 @@
 #include <QString>
 
 class AbstractStaticItemModel;
+class SemanticVersion;
 
 // identiying names of static abstract item models
 constexpr char AIM_BOARDS_POT_TYPE[]        {"boards.pottype"};
@@ -159,7 +160,10 @@ namespace Board {
     HasInternalModuleSupport,
     HasExternalModuleSupport,
     HasAudioMuteGPIO,
-    SportMaxBaudRate
+    SportMaxBaudRate,
+    HasIntModuleHeartbeatGPIO,
+    HasTrainerModuleCPPM,
+    HasTrainerModuleSBUS,
   };
 
   struct SwitchInfo
@@ -224,7 +228,7 @@ class Boards
     static StringTagMappingTable getSwitchesLookupTable(Board::Type board);
     static int getCapability(Board::Type board, Board::Capability capability);
     static QString getAxisName(int index);
-    static StringTagMappingTable getAnalogNamesLookupTable(Board::Type board);
+    static StringTagMappingTable getAnalogNamesLookupTable(Board::Type board, const QString strVersion = "0.0.0");
     static QString getAnalogInputName(Board::Type board, int index);
     static bool isBoardCompatible(Board::Type board1, Board::Type board2);
     static QString getBoardName(Board::Type board);
@@ -242,6 +246,9 @@ class Boards
     static int getDefaultExternalModuleSize(Board::Type board);
     static QString externalModuleSizeToString(int value);
     static AbstractStaticItemModel * externalModuleSizeItemModel();
+
+    // TODO replace when refactored to support json defns
+    static int adcPotsBeforeSliders(Board::Type board, SemanticVersion version);
 
   protected:
 
@@ -433,7 +440,7 @@ inline bool IS_FAMILY_HORUS(Board::Type board)
 
 inline bool IS_FAMILY_HORUS_OR_T16(Board::Type board)
 {
-  return IS_FAMILY_HORUS(board) || IS_FAMILY_T16(board) || IS_FLYSKY_NV14(board)/*generally*/;
+  return IS_FAMILY_HORUS(board) || IS_FAMILY_T16(board) || IS_FLYSKY_NV14(board)/*generally*/ || IS_FLYSKY_EL18(board)/*generally*/;
 }
 
 inline bool IS_HORUS_OR_TARANIS(Board::Type board)
@@ -443,7 +450,7 @@ inline bool IS_HORUS_OR_TARANIS(Board::Type board)
 
 inline bool IS_STM32(Board::Type board)
 {
-  return IS_TARANIS(board) || IS_FAMILY_HORUS_OR_T16(board) || IS_FLYSKY_NV14(board);
+  return IS_TARANIS(board) || IS_FAMILY_HORUS_OR_T16(board) || IS_FLYSKY_NV14(board) || IS_FLYSKY_EL18(board);
 }
 
 inline bool IS_ARM(Board::Type board)

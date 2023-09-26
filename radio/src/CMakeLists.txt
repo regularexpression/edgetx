@@ -36,7 +36,6 @@ if(SDL2_FOUND)
   option(SIMU_AUDIO "Enable simulator audio." ON)
 endif()
 option(LUA "Enable LUA support" ON)
-option(LUA_MIXER "Enable LUA mixer/model scripts support" OFF)
 option(SIMU_DISKIO "Enable disk IO simulation in simulator. Simulator will use FatFs module and simulated IO layer that  uses \"./sdcard.image\" file as image of SD card. This file must contain whole SD card from first to last sector" OFF)
 option(SIMU_LUA_COMPILER "Pre-compile and save Lua scripts in simulator." ON)
 option(FAS_PROTOTYPE "Support of old FAS prototypes (different resistors)" OFF)
@@ -84,12 +83,6 @@ set(EEPROM_VARIANT  0)
 set(GVARS_VARIANT   1)
 set(FRSKY_VARIANT   2)
 set(3POS_VARIANT    4)
-
-set(FATFS_SRC
-  ${FATFS_DIR}/ff.c
-  ${FATFS_DIR}/ffunicode.c
-  ${FATFS_DIR}/fattime.c
-)
 
 if(PCB STREQUAL X12S OR PCB STREQUAL X10)
   include(targets/horus/CMakeLists.txt)
@@ -180,12 +173,14 @@ if(RTC_BACKUP_RAM)
   add_custom_target(datacopy DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/datacopy.inc)
 endif()
 
-if(LUA)
-  include(lua/CMakeLists.txt)
-endif()
+option(LUA_MIXER "Enable LUA mixer/model scripts support" OFF)
 
 if (LUA_MIXER AND NOT LUA)
   message(FATAL_ERROR "LUA_MIXER requires LUA!!")
+endif()
+
+if(LUA)
+  include(lua/CMakeLists.txt)
 endif()
 
 if(HELI)
@@ -251,9 +246,8 @@ endif()
 
 if(SDCARD)
   add_definitions(-DSDCARD)
-  include_directories(${FATFS_DIR} ${FATFS_DIR}/option)
   set(SRC ${SRC} sdcard.cpp rtc.cpp logs.cpp thirdparty/libopenui/src/libopenui_file.cpp)
-  set(FIRMWARE_SRC ${FIRMWARE_SRC} ${FATFS_SRC})
+  set(FIRMWARE_SRC ${FIRMWARE_SRC})
 endif()
 
 if(SHUTDOWN_CONFIRMATION)
@@ -394,6 +388,7 @@ set(SRC
   strhelpers.cpp
   switches.cpp
   analogs.cpp
+  mixes.cpp
   mixer.cpp
   mixer_scheduler.cpp
   stamp.cpp
@@ -508,7 +503,7 @@ set(COMMON_FLAGS "${COMMON_FLAGS} -O${OPT} ${FPU_FLAGS}")
 set(COMMON_FLAGS "${COMMON_FLAGS} ${WARNING_FLAGS}")
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${COMMON_FLAGS} -Wimplicit")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${COMMON_FLAGS} -fno-rtti")
 
 # these are in addition to CMAKE_CXX_FLAGS
 set(CMAKE_EXE_LINKER_FLAGS "-lm -T${RADIO_SRC_DIR}/${LINKER_SCRIPT}")

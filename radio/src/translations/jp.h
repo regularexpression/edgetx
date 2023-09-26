@@ -55,7 +55,6 @@
 #define TR_COUNTRY_CODES               TR("US","アメリカ"),TR("JP","日本"),TR("EU","ヨーロッパ")
 #define TR_USBMODES                    "確認",TR("Joyst","JoyStick"),TR("SDカード","ストレージ"),"シリアル"
 #define TR_JACK_MODES                  "確認","音声","トレーナー"
-#define TR_TELEMETRY_PROTOCOLS         "FrSky S.PORT","FrSky D","FrSky D (cable)","TBS Crossfire","Spektrum","AFHDS2A IBUS","Multi Telemetry"
 
 #define TR_SBUS_INVERSION_VALUES       "標準","リバースなし"
 #define TR_MULTI_CUSTOM                "カスタム"
@@ -114,6 +113,7 @@
 #define TR_SF_SCREENSHOT               "画面キャプチャ"
 #define TR_SF_RACING_MODE              "レースモード"
 #define TR_SF_DISABLE_TOUCH            "非タッチ"
+#define TR_SF_DISABLE_AUDIO_AMP        "オーディオアンプ OFF"
 #define TR_SF_SET_SCREEN               "メインスクリーン設定"
 #define TR_SF_RESERVE                  "[予備]"
 
@@ -429,7 +429,11 @@
 #define TR_PPM_TRAINER                 "TR"
 #define TR_CH                          "CH"
 #define TR_MODEL                       "モデル名"
+#if defined(SURFACE_RADIO)
+#define TR_FM                          "DM"
+#else
 #define TR_FM                          "FM"
+#else
 #define TR_EEPROMLOWMEM                "EEPROMメモリ低"
 #define TR_PRESS_ANY_KEY_TO_SKIP       "任意のキーを押してスキップします"
 #define TR_THROTTLE_NOT_IDLE           "Throttleがアイドル値ではありません"
@@ -905,6 +909,7 @@
 #define TR_PREFLIGHT_POTSLIDER_CHECK   "OFF","ON","自動"
 #define TR_PREFLIGHT                   "飛行前チェック"
 #define TR_CHECKLIST                   TR(INDENT "Checklist", INDENT "チェックリスト表示")
+#define TR_CHECKLIST_INTERACTIVE       TR3(INDENT "C-Interact", INDENT "Interact. checklist", INDENT "Interactive checklist")
 #define TR_AUX_SERIAL_MODE             "シリアルポート"
 #define TR_AUX2_SERIAL_MODE            "シリアルポート 2"
 #define TR_AUX_SERIAL_PORT_POWER       "ポート出力"
@@ -960,6 +965,7 @@
   #define TR_TIMER_SOURCE              "タイマーソース"
   #define TR_SIZE                      "サイズ"
   #define TR_SHADOW                    "影"
+  #define TR_ALIGNMENT                 "アライメント"
   #define TR_ALIGN_LABEL               "ラベルを揃える"
   #define TR_ALIGN_VALUE               "値を揃える"
   #define TR_ALIGN_OPTS                { "左", "中央", "右" }
@@ -1097,6 +1103,7 @@
 #define TR_MENU_LUA                    STR_CHAR_LUA "LUAスクリプト"
 #define TR_MENU_STICKS                 STR_CHAR_STICK "スティック"
 #define TR_MENU_POTS                   STR_CHAR_POT "ダイヤル"
+#define TR_MENU_MIN                    STR_CHAR_FUNCTION "最小"
 #define TR_MENU_MAX                    STR_CHAR_FUNCTION "最大"
 #define TR_MENU_HELI                   STR_CHAR_CYC "サイクリック"
 #define TR_MENU_TRIMS                  STR_CHAR_TRIM "トリム"

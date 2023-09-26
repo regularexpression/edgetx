@@ -258,7 +258,7 @@ LEGACY_NAMES = [
         "targets": {
             "commando8",
             "lr3pro",
-            "nv14",
+            "nv14", "el18",
             "t8", "t12",
             "tlite", "tlitef4", "tpro", "tprov2",
             "tx12", "tx12mk2",
@@ -351,6 +351,30 @@ LEGACY_NAMES = [
                 "label": "SR",
                 "short_label": "R",
                 "description": "Right finger slider"
+            }
+        }
+    },
+    {
+        "targets": {"pocket"},
+        "inputs": {
+            "LH": {
+                "yaml": "Rud"
+            },
+            "LV": {
+                "yaml": "Ele"
+            },
+            "RV": {
+                "yaml": "Thr"
+            },
+            "RH": {
+                "yaml": "Ail"
+            },
+            "P1": {
+                "yaml": "POT1",
+                "lua": "s1",
+                "label": "S1",
+                "short_label": "1",
+                "description": "Potentiometer 1"
             }
         }
     },

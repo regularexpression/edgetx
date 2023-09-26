@@ -111,6 +111,7 @@ RawSourceItemModel::RawSourceItemModel(const GeneralSettings * const generalSett
   addItems(SOURCE_TYPE_STICK,          RawSource::SourcesGroup,  board->getCapability(Board::MaxAnalogs));
   addItems(SOURCE_TYPE_TRIM,           RawSource::TrimsGroup,    board->getCapability(Board::NumTrims));
   addItems(SOURCE_TYPE_SPACEMOUSE,     RawSource::SourcesGroup,  CPN_MAX_SPACEMOUSE);
+  addItems(SOURCE_TYPE_MIN,            RawSource::SourcesGroup,  1);
   addItems(SOURCE_TYPE_MAX,            RawSource::SourcesGroup,  1);
   addItems(SOURCE_TYPE_SWITCH,         RawSource::SwitchesGroup, board->getCapability(Board::Switches));
   addItems(SOURCE_TYPE_FUNCTIONSWITCH, RawSource::SwitchesGroup, board->getCapability(Board::FunctionSwitches));
@@ -413,7 +414,7 @@ CustomFuncActionItemModel::CustomFuncActionItemModel(const GeneralSettings * con
 void CustomFuncActionItemModel::setDynamicItemData(QStandardItem * item, const int value) const
 {
   item->setText(CustomFunctionData::funcToString((AssignFunc)value, modelData));
-  item->setData(CustomFunctionData::isFuncAvailable(value), IMDR_Available);
+  item->setData(CustomFunctionData::isFuncAvailable(value, modelData), IMDR_Available);
 }
 
 void CustomFuncActionItemModel::update(const int event)

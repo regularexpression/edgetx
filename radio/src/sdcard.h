@@ -24,7 +24,6 @@
 
 #include "ff.h"
 
-extern FATFS g_FATFS_Obj;
 extern FIL g_oLogFile;
 
 #include "translations.h"
@@ -79,6 +78,7 @@ const char RADIO_SETTINGS_ERRORFILE_YAML_PATH[] = RADIO_PATH PATH_SEPARATOR "rad
 const char YAMLFILE_CHECKSUM_TAG_NAME[] = "checksum";
 #endif
 #define    SPLASH_FILE             "splash.png"
+#define    SHUTDOWN_SPLASH_FILE    "shutdown.png"
 #endif
 
 #define MODELS_EXT          ".bin"
@@ -124,9 +124,17 @@ void logsInit();
 void logsClose();
 void logsWrite();
 
+void sdInit();
+void sdMount();
+void sdDone();
+uint32_t sdMounted();
+
 uint32_t sdGetNoSectors();
 uint32_t sdGetSize();
 uint32_t sdGetFreeSectors();
+uint32_t sdGetFreeKB();
+bool sdIsFull();
+
 const char * sdCheckAndCreateDirectory(const char * path);
 
 #if !defined(BOOT)
@@ -139,7 +147,6 @@ inline const char * SDCARD_ERROR(FRESULT result)
 }
 #endif
 
-// NOTE: 'size' must = 0 or be a valid character position within 'filename' array -- it is NOT validated
 const char * getBasename(const char * path);
 
 bool isFileAvailable(const char * filename, bool exclDir = false);

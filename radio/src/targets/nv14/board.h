@@ -53,29 +53,6 @@ void boardOff();
 #define LEN_CPU_UID                     (3*8+2)
 void getCPUUniqueID(char * s);
 
-// SD driver
-#define BLOCK_SIZE                      512 /* Block Size in Bytes */
-#if !defined(SIMU) || defined(SIMU_DISKIO)
-uint32_t sdIsHC();
-uint32_t sdGetSpeed();
-#define SD_IS_HC()                     (sdIsHC())
-#define SD_GET_SPEED()                 (sdGetSpeed())
-#define SD_GET_FREE_BLOCKNR()          (sdGetFreeSectors())
-#define SD_CARD_PRESENT()              (~SD_PRESENT_GPIO->IDR & SD_PRESENT_GPIO_PIN)
-void sdInit();
-void sdMount();
-void sdDone();
-#define sdPoll10ms()
-uint32_t sdMounted();
-#else
-#define SD_IS_HC()                      (0)
-#define SD_GET_SPEED()                  (0)
-#define sdInit()
-#define sdMount()
-#define sdDone()
-#define SD_CARD_PRESENT()               true
-#endif
-
 // Flash Write driver
 #define FLASH_PAGESIZE 256
 void unlockFlash();
@@ -251,9 +228,15 @@ bool isBacklightEnabled();
 #if !defined(SIMU)
 void usbJoystickUpdate();
 #endif
-#define USB_NAME                        "FlySky NV14"
-#define USB_MANUFACTURER                'F', 'l', 'y', 'S', 'k', 'y', ' ', ' '  /* 8 bytes */
+#if (PCBREV == EL18)
+#define USB_NAME                        "Flysky EL18"
+#define USB_MANUFACTURER                'F', 'l', 'y', 's', 'k', 'y', ' ', ' '  /* 8 bytes */
+#define USB_PRODUCT                     'E', 'L', '1', '8', ' ', ' ', ' ', ' '  /* 8 Bytes */
+#else
+#define USB_NAME                        "Flysky NV14"
+#define USB_MANUFACTURER                'F', 'l', 'y', 's', 'k', 'y', ' ', ' '  /* 8 bytes */
 #define USB_PRODUCT                     'N', 'V', '1', '4', ' ', ' ', ' ', ' '  /* 8 Bytes */
+#endif
 
 #if defined(__cplusplus) && !defined(SIMU)
 }

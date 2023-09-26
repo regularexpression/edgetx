@@ -2080,6 +2080,11 @@ Voulez-vous importer les paramètres depuis un fichier?</translation>
         <translation type="unfinished"></translation>
     </message>
     <message>
+        <location filename="../firmwares/customfunctiondata.cpp" line="129"/>
+        <source>Audio Amp Off</source>
+        <translation>Désact. Ampli Audio</translation>
+    </message>
+    <message>
         <location filename="../firmwares/customfunctiondata.cpp" line="216"/>
         <source>!1x</source>
         <translation type="unfinished"></translation>
@@ -11342,8 +11347,13 @@ E</translation>
     </message>
     <message>
         <location filename="../firmwares/rawsource.cpp" line="190"/>
+        <source>MIN</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../firmwares/rawsource.cpp" line="193"/>
         <source>MAX</source>
-        <translation></translation>
+        <translation type="unfinished"></translation>
     </message>
     <message>
         <location filename="../firmwares/rawsource.cpp" line="203"/>

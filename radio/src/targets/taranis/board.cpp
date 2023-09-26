@@ -20,6 +20,7 @@
  */
 
 #include "hal/adc_driver.h"
+#include "hal/trainer_driver.h"
 #include "hal/switch_driver.h"
 #include "hal/module_port.h"
 
@@ -91,7 +92,6 @@ void boardInit()
                          LCD_RCC_AHB1Periph |
                          AUDIO_RCC_AHB1Periph |
                          BACKLIGHT_RCC_AHB1Periph |
-                         SD_RCC_AHB1Periph |
                          HAPTIC_RCC_AHB1Periph |
                          INTMODULE_RCC_AHB1Periph |
                          EXTMODULE_RCC_AHB1Periph |
@@ -107,11 +107,7 @@ void boardInit()
                          AUDIO_RCC_APB1Periph |
                          BACKLIGHT_RCC_APB1Periph |
                          HAPTIC_RCC_APB1Periph |
-                         INTERRUPT_xMS_RCC_APB1Periph |
-                         TIMER_2MHz_RCC_APB1Periph |
-                         SD_RCC_APB1Periph |
                          TELEMETRY_RCC_APB1Periph |
-                         MIXER_SCHEDULER_TIMER_RCC_APB1Periph |
                          BT_RCC_APB1Periph,
                          ENABLE);
 
@@ -126,7 +122,7 @@ void boardInit()
   bluetoothInit(BLUETOOTH_DEFAULT_BAUDRATE, true);
 #endif
 
-#if defined(RADIO_ZORRO) || defined(RADIO_TX12MK2) || defined(RADIO_BOXER)
+#if defined(MANUFACTURER_RADIOMASTER) && defined(STM32F407xx)
     
   if (FLASH_OB_GetBOR() != OB_BOR_LEVEL3)
   {
@@ -137,6 +133,7 @@ void boardInit()
   }
 #endif
 
+  init_trainer();
   // Sets 'hardwareOption.pcbrev' as well
   pwrInit();
   boardInitModulePorts();
@@ -224,8 +221,7 @@ void boardInit()
 
   lcdInit(); // delaysInit() must be called before
   audioInit();
-  init2MhzTimer();
-  init1msTimer();
+  timersInit();
   usbInit();
 
 #if defined(DEBUG)

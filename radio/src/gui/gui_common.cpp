@@ -25,6 +25,7 @@
 #include "hal/adc_driver.h"
 #include "hal/switch_driver.h"
 #include "switches.h"
+#include "mixes.h"
 
 #undef CPN
 #include "MultiSubtypeDefs.h"
@@ -313,8 +314,7 @@ bool isSourceAvailableInInputs(int source)
   if (source >= MIXSRC_FIRST_SPACEMOUSE && source <= MIXSRC_LAST_SPACEMOUSE)
     return true;
 #endif
-  
-  if (source == MIXSRC_MAX)
+  if (source == MIXSRC_MIN || source == MIXSRC_MAX)
     return true;
 
   if (source >= MIXSRC_FIRST_TRIM && source <= MIXSRC_LAST_TRIM) {
@@ -595,7 +595,11 @@ bool isAssignableFunctionAvailable(int function, CustomFunctionData * functions)
     case FUNC_PLAY_SCRIPT:
       return false;
 #endif
-
+    case FUNC_DISABLE_AUDIO_AMP:
+#if defined(AUDIO_MUTE_GPIO)
+      return true;
+#endif
+      return false;
     default:
       return true;
   }
@@ -607,6 +611,12 @@ bool isAssignableFunctionAvailable(int function)
   return isAssignableFunctionAvailable(function, menuHandlers[menuLevel] == menuModelSpecialFunctions ? g_model.customFn : g_eeGeneral.customFn);
 }
 #endif
+
+bool isTimerSourceAvailable(int index)
+{
+  TimerData *timer = &g_model.timers[index];
+  return timer->mode != 0;
+}
 
 bool isSourceAvailableInGlobalResetSpecialFunction(int index)
 {
@@ -622,16 +632,14 @@ bool isSourceAvailableInResetSpecialFunction(int index)
     TelemetrySensor & telemetrySensor = g_model.telemetrySensors[index-FUNC_RESET_PARAM_FIRST_TELEM];
     return telemetrySensor.isAvailable();
   }
-#if TIMERS < 3
-    else if (index == FUNC_RESET_TIMER3) {
-    return false;
+  else if (index <= FUNC_RESET_TIMER3) {
+    if (index > (TIMERS - 1))
+      return false;
+    else {
+      TimerData *timer = &g_model.timers[index];
+      return timer->mode != 0;
+    }
   }
-#endif
-#if TIMERS < 2
-    else if (index == FUNC_RESET_TIMER2) {
-    return false;
-  }
-#endif
   else {
     return true;
   }
@@ -770,7 +778,8 @@ bool isModuleUsingSport(uint8_t moduleBay, uint8_t moduleType)
     case MODULE_TYPE_ISRM_PXX2:
     case MODULE_TYPE_R9M_LITE_PXX2:
     case MODULE_TYPE_R9M_LITE_PRO_PXX2:
-    case MODULE_TYPE_FLYSKY:
+    case MODULE_TYPE_FLYSKY_AFHDS2A:
+    case MODULE_TYPE_FLYSKY_AFHDS3:
       return false;
 
     case MODULE_TYPE_XJT_PXX1:
@@ -820,8 +829,11 @@ bool isInternalModuleSupported(int moduleType)
 #if defined(INTERNAL_MODULE_PPM)
   case MODULE_TYPE_PPM: return true;
 #endif
-#if defined(INTERNAL_MODULE_AFHDS2A) || defined(INTERNAL_MODULE_AFHDS3)
-  case MODULE_TYPE_FLYSKY: return true;
+#if defined(INTERNAL_MODULE_AFHDS2A)
+  case MODULE_TYPE_FLYSKY_AFHDS2A: return true;
+#endif
+#if defined(INTERNAL_MODULE_AFHDS3)
+  case MODULE_TYPE_FLYSKY_AFHDS3: return true;
 #endif
   }
   return false;
@@ -960,7 +972,17 @@ bool isExternalModuleAvailable(int moduleType)
 #endif
 
 #if !defined(AFHDS3)
-  if (moduleType == MODULE_TYPE_FLYSKY)
+  if (moduleType == MODULE_TYPE_FLYSKY_AFHDS3)
+    return false;
+#endif
+
+#if !defined(AFHDS2)
+  if (moduleType == MODULE_TYPE_FLYSKY_AFHDS2A)
+    return false;
+#endif
+  
+#if !defined(AFHDS3)
+  if (moduleType == MODULE_TYPE_FLYSKY_AFHDS3)
     return false;
 #endif
 
@@ -1000,44 +1022,6 @@ bool isRfProtocolAvailable(int protocol)
     return false;
   }
   if (protocol != MODULE_SUBTYPE_PXX1_OFF && g_model.moduleData[EXTERNAL_MODULE].type == MODULE_TYPE_R9M_PXX2) {
-    return false;
-  }
-#endif
-
-  return true;
-}
-
-bool isTelemetryProtocolAvailable(int protocol)
-{
-#if defined(PCBTARANIS)
-  if (protocol == PROTOCOL_TELEMETRY_FRSKY_D_SECONDARY &&
-      hasSerialMode(UART_MODE_TELEMETRY) < 0) {
-    return false;
-  }
-#endif
-
-  if (protocol== PROTOCOL_TELEMETRY_CROSSFIRE) {
-    return false;
-  }
-
-  if ( protocol== PROTOCOL_TELEMETRY_GHOST) {
-    return false;
-  }
-
-#if !defined(MULTIMODULE)
-  if (protocol == PROTOCOL_TELEMETRY_SPEKTRUM || protocol == PROTOCOL_TELEMETRY_FLYSKY_IBUS || protocol == PROTOCOL_TELEMETRY_MULTIMODULE) {
-    return false;
-  }
-#endif
-
-#if !defined(AFHDS3)
-  if (protocol == PROTOCOL_TELEMETRY_AFHDS3) {
-    return false;
-  }
-#endif
-
-#if defined(PCBHORUS)
-  if (protocol == PROTOCOL_TELEMETRY_FRSKY_D_SECONDARY) {
     return false;
   }
 #endif

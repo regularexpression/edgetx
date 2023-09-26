@@ -57,7 +57,6 @@
 #define TR_COUNTRY_CODES       TR("US","América"),TR("JP","Japón"),TR("EU", "Europa")
 #define TR_USBMODES            "Pregunta","Joystick","SDCard","Serie"
 #define TR_JACK_MODES          "Pregunta","Audio","Entrena."
-#define TR_TELEMETRY_PROTOCOLS "FrSky S.PORT","FrSky D","FrSky D (cable)","TBS Crossfire","Spektrum","AFHDS2A IBUS","Multi Telemetry"
 
 #define TR_SBUS_INVERSION_VALUES       "normal","not inverted"
 #define TR_MULTI_CUSTOM        "Custom"
@@ -116,15 +115,11 @@
 #define TR_SF_SCREENSHOT      "Captura"
 #define TR_SF_RACING_MODE     "RacingMode"
 #define TR_SF_DISABLE_TOUCH   "No Touch"
+#define TR_SF_DISABLE_AUDIO_AMP        "Audio Amp Off"
 #define TR_SF_SET_SCREEN      "Set Main Screen"
 
 #define TR_FSW_RESET_TELEM     TR("Telm", "Telemetría")
-
-#if LCD_W >= 212
-  #define TR_FSW_RESET_TIMERS  "Timer 1","Timer 2","Timer 3"
-#else
-  #define TR_FSW_RESET_TIMERS  "Tmr1","Tmr2","Tmr3"
-#endif
+#define TR_FSW_RESET_TIMERS    "Tmr1","Tmr2","Tmr3"
 
 #define TR_VFSWRESET           TR_FSW_RESET_TIMERS,TR("Todo","Vuelo"),TR_FSW_RESET_TELEM
 
@@ -425,7 +420,11 @@
 #define TR_PPM_TRAINER         "TR"
 #define TR_CH                  "CH"
 #define TR_MODEL               "MODELO"
+#if defined(SURFACE_RADIO)
+#define TR_FM                  "DM"
+#else
 #define TR_FM                  "FM"
+#endif
 #define TR_EEPROMLOWMEM        "EEPROM mem.baja"
 #define TR_PRESS_ANY_KEY_TO_SKIP   "Pulsar tecla para omitir"
 #define TR_THROTTLE_NOT_IDLE     "Aceler. Activado"
@@ -458,8 +457,13 @@
 #define TR_MENUMODELSEL        TR("MODELOS", "SELECCIÓN MODELO")
 #define TR_MENU_MODEL_SETUP            TR("SETUP", "MODEL SETUP")
 #define TR_MENUSETUP           TR("CONFIG. MODELO", "CONFIGURACIÓN MODELO")
+#if defined(SURFACE_RADIO)
+#define TR_MENUFLIGHTMODES     "DRIVE MODES"
+#define TR_MENUFLIGHTMODE      "DRIVE MODE"
+#else
 #define TR_MENUFLIGHTMODE      "MODO DE VUELO"
 #define TR_MENUFLIGHTMODES     "MODOS DE VUELO"
+#endif
 #define TR_MENUHELISETUP       "CONFIGURACIÓN HELI"
 
 
@@ -912,6 +916,7 @@
 #define TR_PREFLIGHT_POTSLIDER_CHECK   "Off","On","Auto"
 #define TR_PREFLIGHT           "Chequeos prevuelo"
 #define TR_CHECKLIST           TR(INDENT "Lista verif", INDENT "Lista verificación")
+#define TR_CHECKLIST_INTERACTIVE       TR3(INDENT "C-Interact", INDENT "Interact. checklist", INDENT "Interactive checklist")
 #define TR_AUX_SERIAL_MODE     "Puerto serie"
 #define TR_AUX2_SERIAL_MODE    "Puerto serie 2"
 #define TR_AUX_SERIAL_PORT_POWER       "Port power"
@@ -967,6 +972,7 @@
   #define TR_TIMER_SOURCE              "Entrada timer"
   #define TR_SIZE                      "Tamaño"
   #define TR_SHADOW                    "Sombra"
+  #define TR_ALIGNMENT                 "Alinear"
   #define TR_ALIGN_LABEL               "Alinear marbete"
   #define TR_ALIGN_VALUE               "Alinear valor"
   #define TR_ALIGN_OPTS                { "Lzquierdo", "Centro", "Derecho" }
@@ -1105,6 +1111,7 @@
 #define TR_MENU_LUA             STR_CHAR_LUA "Lua scripts"
 #define TR_MENU_STICKS           STR_CHAR_STICK "Sticks"
 #define TR_MENU_POTS            STR_CHAR_POT "Pots"
+#define TR_MENU_MIN             STR_CHAR_FUNCTION "MIN"
 #define TR_MENU_MAX             STR_CHAR_FUNCTION "MAX"
 #define TR_MENU_HELI            STR_CHAR_CYC "Cíclico"
 #define TR_MENU_TRIMS            STR_CHAR_TRIM "Trims"

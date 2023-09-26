@@ -399,6 +399,8 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
               requiredBacklightBright =
                   (1024 - raw) * (BACKLIGHT_LEVEL_MAX - BACKLIGHT_LEVEL_MIN) /
                   2048;
+#elif defined(OLED_SCREEN)
+            requiredBacklightBright = (raw + 1024) * 254 / 2048;
 #else
             requiredBacklightBright = (1024 - raw) * 100 / 2048;
 #endif
@@ -421,6 +423,11 @@ void evalFunctions(const CustomFunctionData * functions, CustomFunctionsContext 
 #if defined(HARDWARE_TOUCH)
           case FUNC_DISABLE_TOUCH:
             newActiveFunctions |= (1u << FUNCTION_DISABLE_TOUCH);
+            break;
+#endif
+#if defined(AUDIO_MUTE_GPIO)
+          case FUNC_DISABLE_AUDIO_AMP:
+            newActiveFunctions |= (1u << FUNCTION_DISABLE_AUDIO_AMP);
             break;
 #endif
 #if defined(COLORLCD)
@@ -530,6 +537,10 @@ const char* funcGetLabel(uint8_t func)
     return STR_SF_DISABLE_TOUCH;
   case FUNC_SET_SCREEN:
     return STR_SF_SET_SCREEN;
+#endif
+#if defined(AUDIO_MUTE_GPIO)
+    case FUNC_DISABLE_AUDIO_AMP:
+      return STR_SF_DISABLE_AUDIO_AMP;
 #endif
 #if defined(DEBUG)
   case FUNC_TEST:

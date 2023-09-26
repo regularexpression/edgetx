@@ -286,7 +286,7 @@ class SensorButton : public Button {
       setNumIdState();
 
       strAppend(s, g_model.telemetrySensors[index].label, TELEM_LABEL_LEN);
-      auto lbl = tsStyle.newName(lvobj, s);
+      tsStyle.newName(lvobj, s);
 
       box = tsStyle.newFreshCont(lvobj);
       fresh = tsStyle.newFreshIcon(box);
@@ -604,13 +604,21 @@ class SensorEditWindow : public Page {
 
       paramLines[P_ID] = form->newLine(&grid2);
       new StaticText(paramLines[P_ID], rect_t{}, STR_ID, 0, COLOR_THEME_PRIMARY1);
-      auto hex = new NumberEdit(paramLines[P_ID], rect_t{}, 0, 0xFFFF, GET_SET_DEFAULT(sensor->id));
-      hex->setDisplayHandler([](int32_t value) {
+      auto num = new NumberEdit(paramLines[P_ID], rect_t{}, 0, 0xFFFF, GET_SET_DEFAULT(sensor->id));
+#if LCD_H > LCD_W
+      // Portrait layout - need to limit width of edit box
+      num->setWidth((lv_pct(28)));
+#endif
+      num->setDisplayHandler([](int32_t value) {
         std::stringstream stream;
         stream << std::hex << value;
         return stream.str();
       });
-      new NumberEdit(paramLines[P_ID], rect_t{}, 0, 0xff, GET_SET_DEFAULT(sensor->instance));
+      num = new NumberEdit(paramLines[P_ID], rect_t{}, 0, 0xff, GET_SET_DEFAULT(sensor->instance));
+#if LCD_H > LCD_W
+      // Portrait layout - need to limit width of edit box
+      num->setWidth(lv_pct(28));
+#endif
 
       paramLines[P_UNIT] = form->newLine(&grid);
       new StaticText(paramLines[P_UNIT], rect_t{}, STR_UNIT, 0, COLOR_THEME_PRIMARY1);

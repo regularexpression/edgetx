@@ -28,6 +28,7 @@
 #include "bin_files.h"
 #include "fw_version.h"
 #include "strhelpers.h"
+#include "hal/storage.h"
 
 // 'private'
 static DIR  dir;
@@ -38,6 +39,16 @@ BinFileInfo binFiles[MAX_BIN_FILES];
 uint8_t     Block_buffer[BLOCK_LEN];
 UINT        BlockCount;
 
+void sdInit(void)
+{
+  static FATFS fatFS __DMA;
+
+  storageInit();
+
+  if (f_mount(&fatFS, "", 1) == FR_OK) {
+    f_chdir("/");
+  }
+}
 
 FRESULT openBinDir(MemoryType mt)
 {

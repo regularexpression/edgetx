@@ -171,9 +171,12 @@ QVariant ModelsListModel::data(const QModelIndex & index, int role) const
     return item->data(index.column());
   }
 
-  if (role == Qt::FontRole && item->isModel() && item->getModelIndex() == (int)radioData->generalSettings.currModelIndex) {
+  if (role == Qt::FontRole && item->isModel()) {
     QFont font;
-    font.setBold(true);
+    if (item->getModelIndex() == (int)radioData->generalSettings.currModelIndex)
+      font.setBold(true);
+    if (radioData->models[item->getModelIndex()].modelUpdated)
+      font.setItalic(true);
     return font;
   }
 
@@ -416,7 +419,7 @@ bool ModelsListModel::hasModelsMimeData(const QMimeData * mimeData) const
   return mimeData->hasFormat("application/x-companion-modeldata");
 }
 
-bool ModelsListModel::hasGenralMimeData(const QMimeData * mimeData) const
+bool ModelsListModel::hasGeneralMimeData(const QMimeData * mimeData) const
 {
   return mimeData->hasFormat("application/x-companion-generaldata");
 }

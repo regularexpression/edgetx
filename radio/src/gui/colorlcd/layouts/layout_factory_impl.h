@@ -113,6 +113,8 @@ class Layout: public LayoutBase
     // Updates settings for trims, sliders, pots, etc...
     void adjustLayout() override;
 
+    bool isLayout() override { return true; }
+
   protected:
     const LayoutFactory * factory  = nullptr;
     std::unique_ptr<ViewMainDecoration> decoration;
@@ -203,11 +205,6 @@ class BaseLayoutFactory: public LayoutFactory
     }
 
     const uint8_t* getBitmap() const override { return bitmap; }
-
-    void drawThumb(BitmapBuffer * dc, uint16_t x, uint16_t y, uint32_t flags) const override
-    {
-      dc->drawBitmapPattern(x, y, bitmap, flags);
-    }
 
     const ZoneOption * getOptions() const override
     {

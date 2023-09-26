@@ -8,6 +8,7 @@ option(MULTIMODULE "DIY Multiprotocol TX Module (https://github.com/pascallanger
 option(GHOST "Ghost TX Module" ON)
 option(SPACEMOUSE "Support for SpaceMouse" OFF)
 option(MODULE_SIZE_STD "Standard size TX Module" ON)
+option(LUA_MIXER "Enable LUA mixer/model scripts support" ON)
 
 set(PWR_BUTTON "PRESS" CACHE STRING "Pwr button type (PRESS/SWITCH)")
 set(CPU_TYPE STM32F4)
@@ -145,10 +146,7 @@ elseif (PCB STREQUAL X12S)
   endif()
   set(INTERNAL_GPS_BAUDRATE "9600" CACHE STRING "Baud rate for internal GPS")
   set(AUX2_SERIAL ON) # wire to GPS
-  set(FIRMWARE_TARGET_SRC
-    ${FIRMWARE_TARGET_SRC}
-    audio_spi_driver.cpp
-    )
+  set(FIRMWARE_SRC ${FIRMWARE_SRC} targets/common/arm/stm32/vs1053b.cpp)
   set(BITMAPS_TARGET x12s_bitmaps)
   set(FONTS_TARGET x12s_fonts)
   set(LCD_DRIVER lcd_driver.cpp)
@@ -273,7 +271,7 @@ set(FIRMWARE_SRC
   targets/common/arm/stm32/heartbeat_driver.cpp
   targets/common/arm/stm32/trainer_driver.cpp
   targets/common/arm/stm32/ads79xx.cpp
-  targets/common/arm/stm32/sdio_sd.c
+  targets/common/arm/stm32/diskio_sdio.cpp
   )
 
 if(BOOTLOADER)

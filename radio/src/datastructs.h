@@ -125,6 +125,8 @@ static inline void check_struct()
 #elif defined(RADIO_TPRO)
   CHKSIZE(RadioData, 859);
   CHKSIZE(ModelData, 6290);
+#elif defined(RADIO_POCKET)
+  CHKSIZE(RadioData, 859);
 #elif defined(RADIO_TPROV2)
   CHKSIZE(RadioData, 859);
   CHKSIZE(ModelData, 6290);
@@ -145,14 +147,14 @@ static inline void check_struct()
   CHKSIZE(ModelData, 6706);
 #elif defined(PCBHORUS)
   #if defined(PCBX10)
-    CHKSIZE(RadioData, 916);
+    CHKSIZE(RadioData, 848);
     CHKSIZE(ModelData, 15607);
   #else
-    CHKSIZE(RadioData, 916);
+    CHKSIZE(RadioData, 848);
     CHKSIZE(ModelData, 15607);
   #endif
 #elif defined(PCBNV14)
-  CHKSIZE(RadioData, 916);
+  CHKSIZE(RadioData, 848);
   CHKSIZE(ModelData, 15463);
 #endif
 

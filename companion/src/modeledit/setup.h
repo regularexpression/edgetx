@@ -35,6 +35,7 @@ namespace Ui {
 }
 
 class AutoLineEdit;
+class FilteredItemModel;
 
 class TimerPanel : public ModelPanel
 {
@@ -57,6 +58,7 @@ class TimerPanel : public ModelPanel
 
   signals:
     void nameChanged();
+    void modeChanged();
 
   private:
     TimerData & timer;
@@ -78,11 +80,13 @@ class ModulePanel : public ModelPanel
   public slots:
     void onExtendedLimitsToggled();
     void onFailsafeModified(unsigned index);
+    void updateTrainerModeItemModel();
 
   signals:
     void channelsRangeChanged();
     void failsafeModified(unsigned index);
     void updateItemModels();
+    void protocolChanged();
 
   private slots:
     void setupFailsafes();
@@ -132,6 +136,10 @@ class ModulePanel : public ModelPanel
     QMap<int, ChannelFailsafeWidgetsGroup> failsafeGroupsMap;
     static quint8 failsafesValueDisplayType;  // FailsafeValueDisplayTypes
     void updateFailsafeUI(unsigned channel, quint8 updtSb);
+    FilteredItemModel *trainerModeItemModel;
+    static bool isTrainerModule(int index) { return index < 0; }
+    static bool isInternalModule(int index) { return index == 0; }
+    static bool isExternalModule(int index) { return index > 0; }
 };
 
 class FunctionSwitchesPanel : public ModelPanel
@@ -190,6 +198,7 @@ class SetupPanel : public ModelPanel
     void on_customThrottleWarningPosition_valueChanged(int value);
     void on_throttleReverse_toggled(bool checked);
     void on_displayText_toggled(bool checked);
+    void on_checklistInteractive_toggled(bool checked);
     void on_gfEnabled_toggled(bool checked);
     void on_image_currentIndexChanged(int index);
     void on_trimIncrement_currentIndexChanged(int index);
@@ -209,7 +218,7 @@ class SetupPanel : public ModelPanel
     void cmTimerPaste();
     void cmTimerMoveDown();
     void cmTimerMoveUp();
-    void onTimerNameChanged();
+    void onTimerChanged();
     void onItemModelAboutToBeUpdated();
     void onItemModelUpdateComplete();
     void onModuleUpdateItemModels();

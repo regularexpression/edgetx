@@ -296,19 +296,16 @@
 #define SD_RCC_APB1Periph               0
 #define SD_PRESENT_GPIO                 GPIOH
 #define SD_PRESENT_GPIO_PIN             GPIO_Pin_10  // PH.10
+#define SD_PRESENT_LL_GPIO_PIN          LL_GPIO_PIN_10  // PH.10
+#define SD_SDIO_DMA                     DMA2
 #define SD_SDIO_DMA_STREAM              DMA2_Stream3
-#define SD_SDIO_DMA_CHANNEL             DMA_Channel_4
-#define SD_SDIO_DMA_FLAG_FEIF           DMA_FLAG_FEIF3
-#define SD_SDIO_DMA_FLAG_DMEIF          DMA_FLAG_DMEIF3
-#define SD_SDIO_DMA_FLAG_TEIF           DMA_FLAG_TEIF3
-#define SD_SDIO_DMA_FLAG_HTIF           DMA_FLAG_HTIF3
-#define SD_SDIO_DMA_FLAG_TCIF           DMA_FLAG_TCIF3
+#define SD_SDIO_DMA_CHANNEL             LL_DMA_CHANNEL_4
 #define SD_SDIO_DMA_IRQn                DMA2_Stream3_IRQn
 #define SD_SDIO_DMA_IRQHANDLER          DMA2_Stream3_IRQHandler
-#define SD_SDIO_FIFO_ADDRESS            ((uint32_t)0x40012C80)
 #define SD_SDIO_CLK_DIV(fq)             ((48000000 / (fq)) - 2)
 #define SD_SDIO_INIT_CLK_DIV            SD_SDIO_CLK_DIV(400000)
 #define SD_SDIO_TRANSFER_CLK_DIV        SD_SDIO_CLK_DIV(24000000)
+#define STORAGE_USE_SDIO
 
 // SDRAM
 #define SDRAM_RCC_AHB1Periph            (RCC_AHB1Periph_GPIOC | RCC_AHB1Periph_GPIOD | RCC_AHB1Periph_GPIOE | RCC_AHB1Periph_GPIOF | RCC_AHB1Periph_GPIOG | RCC_AHB1Periph_GPIOH)
@@ -544,18 +541,12 @@
 #define BT_CMD_MODE_GPIO                GPIOH
 #define BT_CMD_MODE_GPIO_PIN            GPIO_Pin_6 // PH.6
 
-// Xms Interrupt
-#define INTERRUPT_xMS_RCC_APB1Periph    RCC_APB1Periph_TIM14
-#define INTERRUPT_xMS_TIMER             TIM14
-#define INTERRUPT_xMS_IRQn              TIM8_TRG_COM_TIM14_IRQn
-#define INTERRUPT_xMS_IRQHandler        TIM8_TRG_COM_TIM14_IRQHandler
-
-// 2MHz Timer
-#define TIMER_2MHz_RCC_APB1Periph       RCC_APB1Periph_TIM7
-#define TIMER_2MHz_TIMER                TIM7
+// Millisecond timer
+#define MS_TIMER                        TIM14
+#define MS_TIMER_IRQn                   TIM8_TRG_COM_TIM14_IRQn
+#define MS_TIMER_IRQHandler             TIM8_TRG_COM_TIM14_IRQHandler
 
 // Mixer scheduler timer
-#define MIXER_SCHEDULER_TIMER_RCC_APB1Periph RCC_APB1Periph_TIM12
 #define MIXER_SCHEDULER_TIMER                TIM12
 #define MIXER_SCHEDULER_TIMER_FREQ           (PERI1_FREQUENCY * TIMER_MULT_APB1)
 #define MIXER_SCHEDULER_TIMER_IRQn           TIM8_BRK_TIM12_IRQn

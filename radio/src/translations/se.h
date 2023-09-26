@@ -66,7 +66,6 @@
 #define TR_COUNTRY_CODES                TR("US","Amerika"),TR("JP","Japan"),TR("EU","Europa")
 #define TR_USBMODES                     "Fråga","Joystick",TR("SD-kort","SD-kortlagring"),"Seriell"
 #define TR_JACK_MODES                   "Fråga","Audio","Lärare"
-#define TR_TELEMETRY_PROTOCOLS          "FrSky S.Port","FrSky D","FrSky D (sladd)","TBS Crossfire","Spektrum","AFHDS2A IBUS","Multi Telemetry"
 #define TR_SBUS_INVERSION_VALUES        "normal","ej inverterad"
 #define TR_MULTI_CUSTOM                 "Anpassad"
 #define TR_VTRIMINC                     TR("Expo","Exponentiell"),TR("xFin","Extra fin"),"Fin","Medium","Grov"
@@ -125,16 +124,12 @@
 #define TR_SF_SCREENSHOT                "Skärmbild"
 #define TR_SF_RACING_MODE               "Tävlingsläge"
 #define TR_SF_DISABLE_TOUCH             "Ej pekskärm"
+#define TR_SF_DISABLE_AUDIO_AMP         TR("Audioförst. av","Audioförstärkare av")
 #define TR_SF_SET_SCREEN                "Sätt huvudskärm"
 #define TR_SF_RESERVE                   "[reserv]"
 
 #define TR_FSW_RESET_TELEM              TR("Telm","Telemetri")
-
-#if LCD_W >= 212
-  #define TR_FSW_RESET_TIMERS           "Timer 1","Timer 2","Timer 3"
-#else
-  #define TR_FSW_RESET_TIMERS           "Tmr1","Tmr2","Tmr3"
-#endif
+#define TR_FSW_RESET_TIMERS             "Tmr1","Tmr2","Tmr3"
 
 #define TR_VFSWRESET                    TR_FSW_RESET_TIMERS,"Alla",TR_FSW_RESET_TELEM
 #define TR_FUNCSOUNDS                   TR("Bp1","Beep1"),TR("Bp2","Beep2"),TR("Bp3","Beep3"),TR("Wrn1","Warn1"),TR("Wrn2","Warn2"),TR("Chee","Cheep"),TR("Rata","Ratata"),"Tick",TR("Sirn","Siren"),"Ring",TR("SciF","SciFi"),TR("Robt","Robot"),TR("Chrp","Chirp"),"Tada",TR("Crck","Crickt"),TR("Alrm","AlmClk")
@@ -455,7 +450,11 @@
 #define TR_PPM_TRAINER                  "TR"
 #define TR_CH                           "KA"
 #define TR_MODEL                        "MODELL"
+#if defined(SURFACE_RADIO)
+#define TR_FM                           "DM"
+#else
 #define TR_FM                           "FL"
+#endif
 #define TR_EEPROMLOWMEM                 "Minnesbrist"
 #define TR_PRESS_ANY_KEY_TO_SKIP        "Avbryt med valfri knapp"
 #define TR_THROTTLE_NOT_IDLE            "Gasen är på!"
@@ -487,8 +486,13 @@
 #define TR_CHANNEL2FAILSAFE             "Kanal=>Failsafe"
 #define TR_MENUMODELSEL                 TR("MODELL","VÄLJ MODELL")
 #define TR_MENU_MODEL_SETUP             TR("MODELLINSTÄLLNING","MODELLINSTÄLLNINGAR")
+#if defined(SURFACE_RADIO)
+#define TR_MENUFLIGHTMODES              "DRIVE MODES"
+#define TR_MENUFLIGHTMODE               "DRIVE MODE"
+#else
 #define TR_MENUFLIGHTMODE               "FLYGLÄGE"
 #define TR_MENUFLIGHTMODES              "FLYGLÄGEN"
+#endif
 #define TR_MENUHELISETUP                "HELIKOPTER"
 
 #define TR_MENUINPUTS                   "INPUT"
@@ -520,7 +524,7 @@
 #define TR_MULTI_FIXEDID                TR("FastID", "Fast ID")
 #define TR_MULTI_OPTION                 TR("Alternativ", "Alternativets värde")
 #define TR_MULTI_AUTOBIND               TR(INDENT "Bind ka.",INDENT "Bind via kanal")
-#define TR_DISABLE_CH_MAP               TR("Ej ka.översikt", "Inaktivera kanalöversikt")
+#define TR_DISABLE_CH_MAP               TR("Mappa ej KA", "Inaktivera kanalmappning")
 #define TR_DISABLE_TELEM                TR("Ej telem.", "Inaktivera telemetri")
 #define TR_MULTI_DSM_AUTODTECT          TR(INDENT "Auto", INDENT "Autodetektera format")
 #define TR_MULTI_LOWPOWER               TR(INDENT "Låg effekt", INDENT "Lågeffektläge")
@@ -545,7 +549,7 @@
 #define TR_PROTOCOL_INVALID             TR("Prot ogiltigt", "Ogiltigt protokoll")
 #define TR_MODULE_STATUS                TR(INDENT "Status", INDENT "Modulstatus")
 #define TR_MODULE_SYNC                  TR(INDENT "Synk", INDENT "Proto synk.status")
-#define TR_MULTI_SERVOFREQ              TR("Servofart", "Servouppdateringsfrekvens")
+#define TR_MULTI_SERVOFREQ              TR("Servofrekv.", "Servouppdateringsfrekvens")
 #define TR_MULTI_MAX_THROW              TR("Max. utslag", "Aktivera max. utslag")
 #define TR_MULTI_RFCHAN                 TR("RF kanal", "Välj RF kanal")
 #define TR_FLYSKY_TELEMETRY             TR("FlySky RSSI #", "Använd FlySky RSSI-värde utan skalning")
@@ -939,6 +943,7 @@
 #define TR_PREFLIGHT                    "Startkontroller"
 #define TR_PREFLIGHT_POTSLIDER_CHECK    "Av","På","Auto"
 #define TR_CHECKLIST                    TR(INDENT "Checklista", INDENT "Visa checklista")
+#define TR_CHECKLIST_INTERACTIVE        TR(INDENT "C-Interact", INDENT "Interactive checklist")
 #define TR_AUX_SERIAL_MODE              "Serieport"
 #define TR_AUX2_SERIAL_MODE             "Serieport 2"
 #define TR_AUX_SERIAL_PORT_POWER        "Strömkälla"
@@ -1138,6 +1143,7 @@
 #define TR_MENU_LUA                     STR_CHAR_LUA "Lua-skript"
 #define TR_MENU_STICKS                  STR_CHAR_STICK "Spakar"
 #define TR_MENU_POTS                    STR_CHAR_POT "Vred"
+#define TR_MENU_MIN                     STR_CHAR_FUNCTION "MIN"
 #define TR_MENU_MAX                     STR_CHAR_FUNCTION "MAX"
 #define TR_MENU_HELI                    STR_CHAR_CYC "Cyklisk"
 #define TR_MENU_TRIMS                   STR_CHAR_TRIM "Trimm"

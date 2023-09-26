@@ -59,7 +59,6 @@
 #define TR_COUNTRY_CODES               TR("US","Amerika"),TR("JP","Japonsko"),TR("EU","Evropa")
 #define TR_USBMODES                    TR("Zeptat","Zeptat se"),TR("Joyst","Joystick"),TR("SDkarta","Úložiště"),"Serial"
 #define TR_JACK_MODES                  "Zeptat","Audio","Trenér"
-#define TR_TELEMETRY_PROTOCOLS         "FrSky S.PORT","FrSky D","FrSky D (kabel)","TBS Crossfire","Spektrum","AFHDS2A IBUS","Multi Telemetrie"
 
 #define TR_SBUS_INVERSION_VALUES       "normal","neinvertováno"
 #define TR_MULTI_CUSTOM                "Vlastní"
@@ -123,6 +122,7 @@
 #define TR_SF_SCREENSHOT               "Snímek LCD"
 #define TR_SF_RACING_MODE              "Závodní režim"
 #define TR_SF_DISABLE_TOUCH            "Deaktivace dotyku"
+#define TR_SF_DISABLE_AUDIO_AMP        "Vypnutí zesilovače zvuku"
 #define TR_SF_SET_SCREEN               "Vybrat hlavní obrazovku"
 
 #define TR_FSW_RESET_TELEM             TR("Telm","Telemetrie")
@@ -440,7 +440,11 @@
 #define TR_PPM_TRAINER                 "TR"
 #define TR_CH                          "CH"
 #define TR_MODEL                       "MODEL"
+#if defined(SURFACE_RADIO)
+#define TR_FM                          "DM"
+#else
 #define TR_FM                          "LR"
+#endif
 #define TR_EEPROMLOWMEM                "Dochází EEPROM"
 #define TR_PRESS_ANY_KEY_TO_SKIP       TR("\003Klávesa >>> přeskočit", "Klávesa >>> přeskočit")
 #define TR_THROTTLE_NOT_IDLE           TR("\003Páka plynu je pohnutá", "Páka plynu není na nule")
@@ -472,8 +476,13 @@
 #define TR_CHANNEL2FAILSAFE            "Kanál=>Failsafe"
 #define TR_MENUMODELSEL                "MODEL"
 #define TR_MENU_MODEL_SETUP            "NASTAVENÍ"
+#if defined(SURFACE_RADIO)
+#define TR_MENUFLIGHTMODES             "DRIVE MODES"
+#define TR_MENUFLIGHTMODE              "DRIVE MODE"
+#else
 #define TR_MENUFLIGHTMODE              "LETOVÝ REŽIM"
 #define TR_MENUFLIGHTMODES             "LETOVÉ REŽIMY"
+#endif
 #define TR_MENUHELISETUP               "HELI"
 
 #define TR_MENULIMITS                  "SERVA"
@@ -915,6 +924,7 @@
 #define TR_PREFLIGHT_POTSLIDER_CHECK   "Vyp","Zap","Auto"
 #define TR_PREFLIGHT                   "Předletová kontrola"
 #define TR_CHECKLIST                   TR(INDENT "Poznámky", INDENT "Zobrazit poznámky")
+#define TR_CHECKLIST_INTERACTIVE       TR3(INDENT "C-Interact", INDENT "Interact. checklist", INDENT "Interactive checklist")
 #define TR_AUX_SERIAL_MODE             "Seriový port"
 #define TR_AUX2_SERIAL_MODE            "Seriový port 2"
 #define TR_AUX_SERIAL_PORT_POWER       "Výkon portu"
@@ -970,6 +980,7 @@
   #define TR_TIMER_SOURCE              "Časovač zdroj"
   #define TR_SIZE                      "Velikost"
   #define TR_SHADOW                    "Stíny"
+  #define TR_ALIGNMENT                 "Zarovnání"
   #define TR_ALIGN_LABEL               "Zarovnat název"
   #define TR_ALIGN_VALUE               "Zarovnat hodnotu"
   #define TR_ALIGN_OPTS                { "Vlevo", "Uprostřed", "Vpravo" }
@@ -1108,6 +1119,7 @@
 #define TR_MENU_LUA                    STR_CHAR_LUA "Lua skripty"
 #define TR_MENU_STICKS                 STR_CHAR_STICK "Páky"
 #define TR_MENU_POTS                   STR_CHAR_POT "Potenciometry"
+#define TR_MENU_MIN                    STR_CHAR_FUNCTION "MIN"
 #define TR_MENU_MAX                    STR_CHAR_FUNCTION "MAX"
 #define TR_MENU_HELI                   STR_CHAR_CYC "Cyklika"
 #define TR_MENU_TRIMS                  STR_CHAR_TRIM "Trimy"

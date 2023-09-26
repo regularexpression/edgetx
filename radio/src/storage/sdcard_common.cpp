@@ -25,6 +25,10 @@
 #include "modelslist.h"
 #include "model_init.h"
 
+#if defined(COLORLCD)
+  #include "theme.h"
+#endif
+
 void getModelPath(char * path, const char * filename, const char* pathName)
 {
   unsigned int len = strlen(pathName);
@@ -39,7 +43,7 @@ void storageEraseAll(bool warn)
 
 #if defined(COLORLCD)
   // the theme has not been loaded before
-  static_cast<EdgeTxTheme*>(theme)->load();
+  EdgeTxTheme::instance()->load();
 #endif
 
   // Init backlight mode before entering alert screens
@@ -180,6 +184,10 @@ void storageReadAll()
   modelslist.clear();
 #endif
 
+  // Some radio defaults overriden by config loading:
+  // - screens disabled by default:
+  g_eeGeneral.modelCustomScriptsDisabled = true;
+  
   if (loadRadioSettings() != nullptr) {
     storageEraseAll(true);
   }

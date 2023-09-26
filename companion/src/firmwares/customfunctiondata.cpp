@@ -125,6 +125,8 @@ QString CustomFunctionData::funcToString(const AssignFunc func, const ModelData 
     return tr("Disable Touch");
   else if (func == FuncSetScreen)
     return tr("Set Main Screen");
+  else if (func == FuncDisableAudioAmp)
+    return tr("Audio Amp Off");
   else {
     return QString(CPN_STR_UNKNOWN_ITEM);
   }
@@ -240,7 +242,7 @@ QString CustomFunctionData::enabledToString() const
 }
 
 //  static
-bool CustomFunctionData::isFuncAvailable(const int index)
+bool CustomFunctionData::isFuncAvailable(const int index, const ModelData * model)
 {
   Firmware * fw = getCurrentFirmware();
 
@@ -250,12 +252,15 @@ bool CustomFunctionData::isFuncAvailable(const int index)
         ((index == FuncPlayHaptic) && !fw->getCapability(Haptic)) ||
         ((index == FuncPlayBoth) && !fw->getCapability(HasBeeper)) ||
         ((index == FuncLogs) && !fw->getCapability(HasSDLogs)) ||
-        ((index >= FuncSetTimer1 && index <= FuncSetTimerLast) && index > FuncSetTimer1 + fw->getCapability(Timers)) ||
+        ((index >= FuncSetTimer1 && index <= FuncSetTimerLast) &&
+         (index > FuncSetTimer1 + fw->getCapability(Timers) ||
+         (model ? model->timers[index - FuncSetTimer1].isModeOff() : false))) ||
         ((index == FuncScreenshot) && !IS_HORUS_OR_TARANIS(fw->getBoard())) ||
         ((index >= FuncRangeCheckInternalModule && index <= FuncBindExternalModule) && !fw->getCapability(DangerousFunctions)) ||
         ((index >= FuncAdjustGV1 && index <= FuncAdjustGVLast) && !fw->getCapability(Gvars)) ||
         ((index == FuncDisableTouch) && !IS_HORUS_OR_TARANIS(fw->getBoard())) ||
-        ((index == FuncSetScreen && !Boards::getCapability(fw->getBoard(), Board::HasColorLcd)))
+        ((index == FuncSetScreen && !Boards::getCapability(fw->getBoard(), Board::HasColorLcd)) ||
+        ((index == FuncDisableAudioAmp && !Boards::getCapability(fw->getBoard(), Board::HasAudioMuteGPIO))))
         );
   return !ret;
 }
@@ -312,7 +317,7 @@ bool CustomFunctionData::isResetParamAvailable(const int index, const ModelData 
   Firmware * firmware = getCurrentFirmware();
 
   if (index < CPN_MAX_TIMERS) {
-    if (index < firmware->getCapability(Timers))
+    if (index < firmware->getCapability(Timers) && (model ? !model->timers[index].isModeOff() : true))
       return true;
     else
       return false;
@@ -469,7 +474,8 @@ bool CustomFunctionData::isParamAvailable() const
     FuncBindInternalModule,
     FuncBindExternalModule,
     FuncRacingMode,
-    FuncDisableTouch
+    FuncDisableTouch,
+    FuncDisableAudioAmp
   };
 
   return funcList.contains(func) ? false : true;

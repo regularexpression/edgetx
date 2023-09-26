@@ -246,9 +246,6 @@ enum RotaryEncoderMode {
 #define CASE_JACK_DETECT(x)
 #endif
 
-#if defined(DISK_CACHE)
-  #include "disk_cache.h"
-#endif
 
 #include "debug.h"
 
@@ -448,7 +445,6 @@ void doMixerPeriodicUpdates();
 void checkTrims();
 extern uint8_t currentBacklightBright;
 void perMain();
-void per10ms();
 
 getvalue_t getValue(mixsrc_t i, bool* valid = nullptr);
 
@@ -630,7 +626,6 @@ uint16_t anaIn(uint8_t chan);
 
 FlightModeData * flightModeAddress(uint8_t idx);
 ExpoData * expoAddress(uint8_t idx);
-MixData * mixAddress(uint8_t idx);
 LimitData * limitAddress(uint8_t idx);
 LogicalSwitchData * lswAddress(uint8_t idx);
 USBJoystickChData * usbJChAddress(uint8_t idx);
@@ -667,6 +662,9 @@ enum FunctionsActive {
   FUNCTION_RACING_MODE,
 #if defined(HARDWARE_TOUCH)
   FUNCTION_DISABLE_TOUCH,
+#endif
+#if defined(AUDIO_MUTE_GPIO)
+  FUNCTION_DISABLE_AUDIO_AMP
 #endif
 };
 
@@ -978,6 +976,8 @@ union ReusableBuffer
     char filename[TEXT_FILENAME_MAXLEN];
     char lines[NUM_BODY_LINES][LCD_COLS + 1];
     int linesCount;
+    bool checklistComplete;
+    bool pushMenu;
   } viewText;
 #endif
 
@@ -1050,10 +1050,6 @@ inline uint8_t GET_TXBATT_BARS(uint8_t barsMax)
 inline bool IS_TXBATT_WARNING()
 {
   return g_vbat100mV <= g_eeGeneral.vBatWarn;
-}
-
-inline bool IS_SDCARD_FULL() {
-  return sdGetFreeSectors() < ((50 *1024*1024) / BLOCK_SIZE); // 50MB safety margin
 }
 
 enum TelemetryViews {

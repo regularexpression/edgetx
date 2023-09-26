@@ -195,6 +195,7 @@ void TimerPanel::onModeChanged(int index)
 {
   timer.modeChanged();
   update();
+  emit modeChanged();
 }
 
 /******************************************************************************/
@@ -224,6 +225,7 @@ void TimerPanel::onModeChanged(int index)
 #define MASK_MULTI_DSM_OPT         (1<<19)
 #define MASK_CHANNELMAP            (1<<20)
 #define MASK_MULTI_BAYANG_OPT      (1<<21)
+#define MASK_AFHDS                 (1<<22)
 
 quint8 ModulePanel::failsafesValueDisplayType = ModulePanel::FAILSAFE_DISPLAY_PERCENT;
 
@@ -232,27 +234,27 @@ ModulePanel::ModulePanel(QWidget * parent, ModelData & model, ModuleData & modul
   ModelPanel(parent, model, generalSettings, firmware),
   module(module),
   moduleIdx(moduleIdx),
-  ui(new Ui::Module)
+  ui(new Ui::Module),
+  trainerModeItemModel(nullptr)
 {
   lock = true;
 
   ui->setupUi(this);
 
   ui->label_module->setText(ModuleData::indexToString(moduleIdx, firmware));
-  if (moduleIdx < 0) {
+  if (isTrainerModule(moduleIdx)) {
     ui->formLayout_col1->setSpacing(0);
     if (!IS_HORUS_OR_TARANIS(firmware->getBoard())) {
       ui->label_trainerMode->hide();
       ui->trainerMode->hide();
     }
     else {
-      if (panelFilteredItemModels)
-        ui->trainerMode->setModel(panelFilteredItemModels->getItemModel(FIM_TRAINERMODE));
+      updateTrainerModeItemModel();
       ui->trainerMode->setField(model.trainerMode);
       connect(ui->trainerMode, &AutoComboBox::currentDataChanged, this, [=] () {
-              update();
-              emit updateItemModels();
-              emit modified();
+        update();
+        emit updateItemModels();
+        emit modified();
       });
     }
   }
@@ -262,16 +264,16 @@ ModulePanel::ModulePanel(QWidget * parent, ModelData & model, ModuleData & modul
   }
 
   if (panelFilteredItemModels) {
-    if (moduleIdx >= 0) {
+    if (!isTrainerModule(moduleIdx)) {
       int id = panelFilteredItemModels->registerItemModel(new FilteredItemModel(ModuleData::protocolItemModel(generalSettings), moduleIdx + 1/*flag cannot be 0*/), QString("Module Protocol %1").arg(moduleIdx));
       panelFilteredItemModels->getItemModel(id)->setSortCaseSensitivity(Qt::CaseInsensitive);
       panelFilteredItemModels->getItemModel(id)->sort(0);
       ui->protocol->setModel(panelFilteredItemModels->getItemModel(id));
 
       if (ui->protocol->findData(module.protocol) < 0) {
-        const QString moduleIdxDesc = moduleIdx == 0 ? tr("internal") : tr("external");
-        const QString compareDesc = moduleIdx == 0 ? tr("hardware") : tr("profile");
-        const QString intModuleDesc = moduleIdx == 0 ? ModuleData::typeToString(generalSettings.internalModule) : "";
+        const QString moduleIdxDesc = isInternalModule(moduleIdx) ? tr("internal") : tr("external");
+        const QString compareDesc = isInternalModule(moduleIdx) ? tr("hardware") : tr("profile");
+        const QString intModuleDesc = isInternalModule(moduleIdx) ? ModuleData::typeToString(generalSettings.internalModule) : "";
         QString msg = tr("Warning: The %1 module protocol <b>%2</b> is incompatible with the <b>%3 %1 module %4</b> and has been set to <b>OFF</b>!");
         msg = msg.arg(moduleIdxDesc).arg(module.protocolToString(module.protocol)).arg(compareDesc).arg(intModuleDesc);
 
@@ -290,7 +292,7 @@ ModulePanel::ModulePanel(QWidget * parent, ModelData & model, ModuleData & modul
       ui->protocol->setField(module.protocol, this);
     }
 
-    if (moduleIdx == 0) {
+    if (isInternalModule(moduleIdx)) {
       int id = panelFilteredItemModels->registerItemModel(new FilteredItemModel(GeneralSettings::antennaModeItemModel(true)), FIM_ANTENNAMODE);
       ui->antennaMode->setModel(panelFilteredItemModels->getItemModel(id));
     }
@@ -319,9 +321,32 @@ ModulePanel::ModulePanel(QWidget * parent, ModelData & model, ModuleData & modul
   connect(ui->clearRx1, SIGNAL(clicked()), this, SLOT(onClearAccessRxClicked()));
   connect(ui->clearRx2, SIGNAL(clicked()), this, SLOT(onClearAccessRxClicked()));
   connect(ui->clearRx3, SIGNAL(clicked()), this, SLOT(onClearAccessRxClicked()));
+  connect(ui->cboAfhdsOpt1, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=] (int index)
+    {
+      if (lock)
+        return;
+
+      if (this->module.protocol == PULSES_FLYSKY_AFHDS2A)
+        Helpers::setBitmappedValue(this->module.flysky.mode, ui->cboAfhdsOpt1->currentData().toInt(), 1);
+      else
+        this->module.afhds3.phyMode = ui->cboAfhdsOpt1->currentData().toInt();
+
+      emit modified();
+    });
+  connect(ui->cboAfhdsOpt2, static_cast<void(QComboBox::*)(int)>(&QComboBox::currentIndexChanged), [=] (int index)
+    {
+      if (lock)
+        return;
+
+      if (this->module.protocol == PULSES_FLYSKY_AFHDS2A)
+        Helpers::setBitmappedValue(this->module.flysky.mode, ui->cboAfhdsOpt2->currentData().toInt(), 0);
+      else
+        this->module.afhds3.emi = ui->cboAfhdsOpt2->currentData().toInt();
+
+      emit modified();
+    });
 
   lock = false;
-
 }
 
 ModulePanel::~ModulePanel()
@@ -433,7 +458,7 @@ void ModulePanel::update()
   unsigned int mask = 0;
   unsigned int max_rx_num = 63;
 
-  if (moduleIdx >= 0) {
+  if (!isTrainerModule(moduleIdx)) {
     mask |= MASK_PROTOCOL;
     switch (protocol) {
       case PULSES_PXX_R9M:
@@ -460,7 +485,7 @@ void ModulePanel::update()
         else if (protocol==PULSES_ACCESS_ISRM || protocol==PULSES_ACCESS_R9M ||
                  protocol==PULSES_ACCESS_R9M_LITE || protocol==PULSES_ACCESS_R9M_LITE_PRO)
           mask |= MASK_RX_NUMBER | MASK_ACCESS;
-        if (moduleIdx == 0 &&
+        if (isInternalModule(moduleIdx) &&
             (protocol==PULSES_PXX_XJT_X16 ||
              protocol==PULSES_PXX_XJT_D8 || protocol==PULSES_PXX_XJT_LR12) &&
             HAS_EXTERNAL_ANTENNA(board) && generalSettings.antennaMode == GeneralSettings::ANTENNA_MODE_PER_MODEL)
@@ -528,10 +553,10 @@ void ModulePanel::update()
         if (pdef.disableChannelMap)
           mask |= MASK_CHANNELMAP;
         break;
-      case PULSES_AFHDS3:
-        module.channelsCount = 18;
-        mask |= MASK_CHANNELS_RANGE| MASK_CHANNELS_COUNT | MASK_FAILSAFES;
-        mask |= MASK_SUBTYPES | MASK_RX_FREQ | MASK_RF_POWER;
+      case PULSES_FLYSKY_AFHDS3:
+        mask |= MASK_RX_NUMBER;
+      case PULSES_FLYSKY_AFHDS2A:
+        mask |= MASK_CHANNELS_RANGE| MASK_CHANNELS_COUNT | MASK_FAILSAFES | MASK_AFHDS;
         break;
       case PULSES_LEMON_DSMP:
         mask |= MASK_CHANNELS_RANGE;
@@ -552,7 +577,7 @@ void ModulePanel::update()
     mask |= MASK_FAILSAFES;
   }
 
-  if (moduleIdx > 0)
+  if (isExternalModule(moduleIdx))
     ui->telemetryBaudrate->setVisible(mask & MASK_BAUDRATE);
   else
     ui->telemetryBaudrate->setVisible(false);
@@ -637,9 +662,6 @@ void ModulePanel::update()
       if (firmware->getCapability(HasModuleR9MFlex))
         i = 2;
       break;
-    case PULSES_AFHDS3:
-        numEntries = 4;
-        break;
     case PULSES_PPM:
         numEntries = PPM_NUM_SUBTYPES;
         break;
@@ -754,11 +776,33 @@ void ModulePanel::update()
   ui->clearRx3->setVisible((mask & MASK_ACCESS) && (module.access.receivers & (1 << 2)));
   ui->rx3->setVisible((mask & MASK_ACCESS) && (module.access.receivers & (1 << 2)));
 
+  // AFHFS
+  if (mask & MASK_AFHDS) {
+    if (protocol == PULSES_FLYSKY_AFHDS2A) {
+      ui->label_afhds->setText(tr("Options"));
+      ui->cboAfhdsOpt1->setModel(ModuleData::afhds2aMode1ItemModel());
+      ui->cboAfhdsOpt1->setCurrentIndex(Helpers::getBitmappedValue(module.flysky.mode, 1));
+
+      ui->cboAfhdsOpt2->setModel(ModuleData::afhds2aMode2ItemModel());
+      ui->cboAfhdsOpt2->setCurrentIndex(Helpers::getBitmappedValue(module.flysky.mode, 0));
+    }
+    else {
+      ui->label_afhds->setText(tr("Type"));
+      ui->cboAfhdsOpt1->setModel(ModuleData::afhds3PhyModeItemModel());
+      ui->cboAfhdsOpt1->setCurrentIndex(ui->cboAfhdsOpt1->findData(module.afhds3.phyMode));
+
+      ui->cboAfhdsOpt2->setModel(ModuleData::afhds3EmiItemModel());
+      ui->cboAfhdsOpt2->setCurrentIndex(ui->cboAfhdsOpt2->findData(module.afhds3.emi));
+    }
+  }
+
+  ui->label_afhds->setVisible(mask & MASK_AFHDS);
+  ui->cboAfhdsOpt1->setVisible(mask & MASK_AFHDS);
+  ui->cboAfhdsOpt2->setVisible(mask & MASK_AFHDS);
+
   // Failsafes
   ui->label_failsafeMode->setVisible(mask & MASK_FAILSAFES);
   ui->failsafeMode->setVisible(mask & MASK_FAILSAFES);
-  //hide reciever mode for afhds3
-  qobject_cast<QListView *>(ui->failsafeMode->view())->setRowHidden(FAILSAFE_RECEIVER, protocol == PULSES_AFHDS3);
 
   if ((mask & MASK_FAILSAFES) && module.failsafeMode == FAILSAFE_CUSTOM) {
     if (ui->failsafesGroupBox->isHidden()) {
@@ -812,7 +856,14 @@ void ModulePanel::onProtocolChanged(int index)
         ui->telemetryBaudrate->setCurrentIndex(1);
       }
     }
+    else if (module.protocol == PULSES_FLYSKY_AFHDS2A) {
+      module.flysky.setDefault();
+    }
+    else if (module.protocol == PULSES_FLYSKY_AFHDS3) {
+      module.afhds3.setDefault();
+    }
 
+    emit protocolChanged();
     emit updateItemModels();
     emit modified();
   }
@@ -830,7 +881,11 @@ void ModulePanel::on_r9mPower_currentIndexChanged(int index)
 {
   if (!lock) {
 
-    if (module.protocol == PULSES_AFHDS3 && module.afhds3.rfPower != (unsigned int)index) {
+    if (module.protocol == PULSES_FLYSKY_AFHDS2A && module.flysky.rfPower != (unsigned int)index) {
+      module.flysky.rfPower = index;
+      emit modified();
+    }
+    else if (module.protocol == PULSES_FLYSKY_AFHDS3 && module.afhds3.rfPower != (unsigned int)index) {
       module.afhds3.rfPower = index;
       emit modified();
     }
@@ -976,19 +1031,17 @@ void ModulePanel::onSubTypeChanged()
   if (!lock && module.subType != type) {
     lock=true;
     module.subType = type;
-    if (module.protocol != PULSES_AFHDS3) {
-      update();
-    }
     emit modified();
     lock =  false;
   }
 }
 
 void ModulePanel::onRfFreqChanged(int freq) {
-  if (module.afhds3.rxFreq != (unsigned int)freq) {
-    module.afhds3.rxFreq = (unsigned int)freq;
-    emit modified();
-  }
+  //  TODO fix for AFHDS2A
+  //if (module.afhds3.rxFreq != (unsigned int)freq) {
+  //  module.afhds3.rxFreq = (unsigned int)freq;
+  //  emit modified();
+  //}
 }
 
 void ModulePanel::on_disableTelem_stateChanged(int state)
@@ -1174,6 +1227,18 @@ void ModulePanel::onClearAccessRxClicked()
     ui->rx3->clear();
     update();
     emit modified();
+  }
+}
+
+void ModulePanel::updateTrainerModeItemModel()
+{
+  if (isTrainerModule(moduleIdx)) {
+    if (trainerModeItemModel)
+      delete trainerModeItemModel;
+
+    trainerModeItemModel = new FilteredItemModel(model->trainerModeItemModel(generalSettings, firmware));
+    ui->trainerMode->setModel(trainerModeItemModel);
+    ui->trainerMode->updateValue();
   }
 }
 
@@ -1408,7 +1473,6 @@ SetupPanel::SetupPanel(QWidget * parent, ModelData & model, GeneralSettings & ge
   panelItemModels->registerItemModel(TimerData::countdownStartItemModel());
   panelItemModels->registerItemModel(TimerData::persistentItemModel());
   panelItemModels->registerItemModel(TimerData::modeItemModel());
-  panelFilteredModels->registerItemModel(new FilteredItemModel(ModelData::trainerModeItemModel(generalSettings, firmware)), FIM_TRAINERMODE);
   panelItemModels->registerItemModel(TimerData::showElapsedItemModel());
   Board::Type board = firmware->getBoard();
 
@@ -1483,7 +1547,8 @@ SetupPanel::SetupPanel(QWidget * parent, ModelData & model, GeneralSettings & ge
       timers[i] = new TimerPanel(this, model, model.timers[i], generalSettings, firmware, prevFocus, panelFilteredModels, panelItemModels);
       ui->gridLayout->addWidget(timers[i], 1+i, 1);
       connect(timers[i], &TimerPanel::modified, this, &SetupPanel::modified);
-      connect(timers[i], &TimerPanel::nameChanged, this, &SetupPanel::onTimerNameChanged);
+      connect(timers[i], &TimerPanel::nameChanged, this, &SetupPanel::onTimerChanged);
+      connect(timers[i], &TimerPanel::modeChanged, this, &SetupPanel::onTimerChanged);
       connect(this, &SetupPanel::updated, timers[i], &TimerPanel::update);
       prevFocus = timers[i]->getLastFocus();
       //  TODO more reliable method required
@@ -1656,6 +1721,9 @@ SetupPanel::SetupPanel(QWidget * parent, ModelData & model, GeneralSettings & ge
     ui->modulesLayout->addWidget(modules[CPN_MAX_MODULES]);
     connect(modules[CPN_MAX_MODULES], &ModulePanel::modified, this, &SetupPanel::modified);
     connect(modules[CPN_MAX_MODULES], &ModulePanel::updateItemModels, this, &SetupPanel::onModuleUpdateItemModels);
+    for (int i = firmware->getCapability(NumFirstUsableModule); i < firmware->getCapability(NumModules); i++) {
+      connect(modules[i], &ModulePanel::protocolChanged, modules[CPN_MAX_MODULES], &ModulePanel::updateTrainerModeItemModel);
+    }
   }
 
   disableMouseScrolling();
@@ -1795,6 +1863,7 @@ void SetupPanel::update()
   ui->extendedLimits->setChecked(model->extendedLimits);
   ui->extendedTrims->setChecked(model->extendedTrims);
   ui->displayText->setChecked(model->displayChecklist);
+  ui->checklistInteractive->setChecked(model->checklistInteractive);
   ui->gfEnabled->setChecked(!model->noGlobalFunctions);
   ui->jitterFilter->setCurrentIndex(model->jitterFilter);
 
@@ -1939,6 +2008,12 @@ void SetupPanel::on_potWarningMode_currentIndexChanged(int index)
 void SetupPanel::on_displayText_toggled(bool checked)
 {
   model->displayChecklist = checked;
+  emit modified();
+}
+
+void SetupPanel::on_checklistInteractive_toggled(bool checked)
+{
+  model->checklistInteractive = checked;
   emit modified();
 }
 
@@ -2145,7 +2220,7 @@ void SetupPanel::swapTimerData(int idx1, int idx2)
   }
 }
 
-void SetupPanel::onTimerNameChanged()
+void SetupPanel::onTimerChanged()
 {
   updateItemModels();
 }

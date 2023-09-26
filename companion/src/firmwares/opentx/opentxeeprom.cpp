@@ -2211,40 +2211,6 @@ class ModuleUnionField: public UnionField<unsigned int> {
       unsigned int version;
   };
 
-  class Afhds3Field: public UnionField::TransformedMember {
-    public:
-      Afhds3Field(DataField * parent, ModuleData& module):
-        UnionField::TransformedMember(parent, internalField),
-        internalField(this, "AFHDS3")
-      {
-        ModuleData::Afhds3& afhds3 = module.afhds3;
-        internalField.Append(new UnsignedField<3>(this, minBindPower));
-        internalField.Append(new UnsignedField<3>(this, afhds3.rfPower));
-        internalField.Append(new UnsignedField<1>(this, emissionFCC));
-        internalField.Append(new BoolField<1>(this, operationModeUnicast));
-        internalField.Append(new BoolField<1>(this, operationModeUnicast));
-        internalField.Append(new UnsignedField<16>(this, defaultFailSafeTimout));
-        internalField.Append(new UnsignedField<16>(this, afhds3.rxFreq));
-      }
-
-      bool select(const unsigned int& attr) const override {
-        return attr == PULSES_AFHDS3;
-      }
-
-      void beforeExport() override {}
-
-      void afterImport() override {}
-
-    private:
-      StructField internalField;
-
-      unsigned int minBindPower = 0;
-      unsigned int emissionFCC = 0;
-      unsigned int defaultFailSafeTimout = 1000;
-      bool operationModeUnicast = true;
-  };
-
-
   class AccessField: public UnionField::TransformedMember {
     public:
       AccessField(DataField * parent, ModuleData& module):
@@ -2331,7 +2297,6 @@ class ModuleUnionField: public UnionField<unsigned int> {
     {
       if (version >= 219) {
         Append(new AccessField(parent, module));
-        Append(new Afhds3Field(parent, module));
         Append(new GhostField(parent, module));
       }
       Append(new PxxField(parent, module, version));
@@ -3339,15 +3304,6 @@ OpenTxGeneralData::OpenTxGeneralData(GeneralSettings & generalData, Board::Type 
       internalField.Append(new ZCharField<10>(this, generalData.bluetoothName, "Bluetooth name"));
   }
 
-  if (IS_FAMILY_HORUS_OR_T16(board)) {
-    if (version >= 220) {   //  data from earlier versions cannot be converted so fields initialised in afterImport
-      internalField.Append(new CharField<8>(this, generalData.themeData.themeName, true, "Theme name"));
-      for (int i = 0; i < MAX_THEME_OPTIONS; i++) {
-        internalField.Append(new ZoneOptionValueTypedField(this, generalData.themeData.themePersistentData.options[i], board, version));
-      }
-    }
-  }
-
   if (version >= 220) {
     internalField.Append(new CharField<8>(this, generalData.registrationId, "ACCESS Registration ID"));
   }
@@ -3392,13 +3348,6 @@ void OpenTxGeneralData::beforeExport()
 
 void OpenTxGeneralData::afterImport()
 {
-  if (IS_FAMILY_HORUS_OR_T16(board)) {
-    if (version < 220) {    //  re-initialise as no conversion possible
-      const char * themeName = IS_FLYSKY_NV14(board) ? "FlySky" : "EdgeTX";
-      RadioTheme::init(themeName, generalData.themeData);
-    }
-  }
-
   if (Boards::getCapability((Board::Type)generalData.variant,
                             Board::SportMaxBaudRate) >= 400000)
     generalData.internalModuleBaudrate =

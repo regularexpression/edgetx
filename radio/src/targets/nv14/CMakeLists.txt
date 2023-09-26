@@ -2,11 +2,11 @@ option(DISK_CACHE "Enable SD card disk cache" ON)
 option(UNEXPECTED_SHUTDOWN "Enable the Unexpected Shutdown screen" ON)
 option(STICKS_DEAD_ZONE "Enable sticks dead zone" YES)
 option(MULTIMODULE "DIY Multiprotocol TX Module (https://github.com/pascallanger/DIY-Multiprotocol-TX-Module)" ON)
-option(AFHDS2 "Support for AFHDS2" ON)
 option(GHOST "Ghost TX Module" ON)
 option(PXX1 "PXX1 protocol support" ON)
 option(PXX2 "PXX2 protocol support" OFF)
 option(MODULE_SIZE_STD "Standard size TX Module" ON)
+option(LUA_MIXER "Enable LUA mixer/model scripts support" ON)
 
 set(PWR_BUTTON "PRESS" CACHE STRING "Pwr button type (PRESS/SWITCH)")
 set(CPU_TYPE STM32F4)
@@ -38,13 +38,22 @@ set(RF_BAUD_RATE 921600 230400 115200 57600 38400 19200 9600 4800 2400 1200)
 set(PCB_RF_BAUD 921600 CACHE STRING "INTERNAL_MODULE_BAUDRATE: ${RF_BAUD_RATE}")
 set_property(CACHE PCB_RF_BAUD PROPERTY STRINGS ${RF_BAUD_RATE})
 
-set(FLAVOUR nv14)
 add_definitions(-DPCBNV14 -DPCBFLYSKY -DAFHDS2_BAUDRATE=${PCB_RF_BAUD})
 add_definitions(-DBATTERY_CHARGE -DUSE_TRIMS_AS_BUTTONS)
 
-# defines existing internal modules
-set(INTERNAL_MODULES AFHDS2A;AFHDS3 CACHE STRING "Internal modules")
-set(DEFAULT_INTERNAL_MODULE FLYSKY CACHE STRING "Default internal module")
+if (PCBREV STREQUAL EL18)
+    set(FLAVOUR el18)
+    # defines existing internal modules
+    set(INTERNAL_MODULES AFHDS3 CACHE STRING "Internal modules")
+    set(DEFAULT_INTERNAL_MODULE FLYSKY_AFHDS3 CACHE STRING "Default internal module")
+    set(AFHDS3 ON)
+else()
+    set(FLAVOUR nv14)
+    # defines existing internal modules
+    set(INTERNAL_MODULES AFHDS2A CACHE STRING "Internal modules")
+    set(DEFAULT_INTERNAL_MODULE FLYSKY_AFHDS2A CACHE STRING "Default internal module")
+    set(AFHDS2 ON)
+endif()
 
 set(BITMAPS_TARGET nv14_bitmaps)
 set(FONTS_TARGET x12_fonts)
@@ -79,9 +88,6 @@ endif()
 if(STICKS_DEAD_ZONE)
   add_definitions(-DSTICK_DEAD_ZONE)
 endif()
-
-set(AFHDS2 ON)
-set(AFHDS3 ON)
 
 # VCP CLI
 set(ENABLE_SERIAL_PASSTHROUGH ON CACHE BOOL "Enable serial passthrough")
@@ -134,7 +140,6 @@ set(FIRMWARE_TARGET_SRC
   ${TOUCH_DRIVER}
   sdram_driver.c
   battery_driver.cpp
-  audio_spi_driver.cpp
   backlight_driver.cpp
   )
 
@@ -147,7 +152,8 @@ set(FIRMWARE_SRC
   targets/common/arm/stm32/stm32_usart_driver.cpp
   targets/common/arm/stm32/trainer_driver.cpp
   targets/common/arm/stm32/pwr_driver.cpp
-  targets/common/arm/stm32/sdio_sd.c
+  targets/common/arm/stm32/diskio_sdio.cpp
+  targets/common/arm/stm32/vs1053b.cpp
   )
 
 # Make malloc() thread-safe

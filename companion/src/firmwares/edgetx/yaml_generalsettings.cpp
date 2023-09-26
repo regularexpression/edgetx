@@ -32,8 +32,6 @@
 
 #include <QMessageBox>
 
-SemanticVersion radioSettingsVersion;
-
 const YamlLookupTable beeperModeLut = {
   {  GeneralSettings::BEEPER_QUIET, "mode_quiet" },
   {  GeneralSettings::BEEPER_ALARMS_ONLY, "mode_alarms" },
@@ -114,7 +112,9 @@ const YamlLookupTable internalModuleLut = {
   {  MODULE_TYPE_R9M_LITE_PRO_PXX2, "TYPE_R9M_LITE_PRO_PXX2"  },
   {  MODULE_TYPE_SBUS, "TYPE_SBUS"  },
   {  MODULE_TYPE_XJT_LITE_PXX2, "TYPE_XJT_LITE_PXX2"  },
-  {  MODULE_TYPE_FLYSKY, "TYPE_FLYSKY"  },
+  {  MODULE_TYPE_FLYSKY_AFHDS2A, "TYPE_FLYSKY_AFHDS2A"  },
+  {  MODULE_TYPE_FLYSKY_AFHDS3, "TYPE_FLYSKY_AFHDS3"  },
+  {  MODULE_TYPE_LEMON_DSMP, "TYPE_LEMON_DSMP"  },
 };
 
 YamlTelemetryBaudrate::YamlTelemetryBaudrate(
@@ -150,13 +150,14 @@ Node convert<GeneralSettings>::encode(const GeneralSettings& rhs)
   Node node;
 
   auto fw = getCurrentFirmware();
+  auto board = fw->getBoard();
 
-  bool hasColorLcd = Boards::getCapability(fw->getBoard(), Board::HasColorLcd);
+  bool hasColorLcd = Boards::getCapability(board, Board::HasColorLcd);
 
   node["semver"] = VERSION;
 
-  std::string board = fw->getFlavour().toStdString();
-  node["board"] = board;
+  std::string strboard = fw->getFlavour().toStdString();
+  node["board"] = strboard;
 
   YamlCalibData calib(rhs.calibMid, rhs.calibSpanNeg, rhs.calibSpanPos);
   node["calib"] = calib;
@@ -264,21 +265,39 @@ Node convert<GeneralSettings>::encode(const GeneralSettings& rhs)
     node["switchConfig"] = switchConfig;
   }
 
-  // combine pots and sliders into potsConfig
+  //  TODO revisit when Companion refactored for adc
+  //  adc encoding requires pots and sliders to be merged in a prescribed sequence as defined in radio json
+  int maxPots = CPN_MAX_POTS + CPN_MAX_SLIDERS;
+  char potName[maxPots][HARDWARE_NAME_LEN + 1];
+  unsigned int potConfig[maxPots];
+
+  const int sticks = Boards::getCapability(board, Board::Sticks);
+  int adcoffset = sticks;
+  int seq = 0;
+
+  for (int i = 0; i < Boards::getCapability(board, Board::Pots); i++) {
+    seq = getCurrentFirmware()->getAnalogInputSeqADC(adcoffset + i) - sticks;
+    if (seq >= 0 && seq < maxPots) {
+      strcpy(potName[seq], rhs.potName[i]);
+      potConfig[seq] = rhs.potConfig[i];
+    }
+  }
+
+  adcoffset += Boards::getCapability(board, Board::Pots);
+
+  for (int i = 0; i < Boards::getCapability(board, Board::Sliders); i++) {
+    seq = getCurrentFirmware()->getAnalogInputSeqADC(adcoffset + i) - sticks;
+    if (seq >= 0 && seq < maxPots) {
+      strcpy(potName[seq], rhs.sliderName[i]);
+      potConfig[seq] = rhs.sliderConfig[i];
+    }
+  }
+
   Node potsConfig;
-  potsConfig = YamlPotConfig(rhs.potName, rhs.potConfig);
+  potsConfig = YamlPotConfig(potName, potConfig);
   if (potsConfig && potsConfig.IsMap()) {
     node["potsConfig"] = potsConfig;
   }
-
-  Node slidersConfig;
-  slidersConfig = YamlSliderConfig(rhs.sliderName, rhs.sliderConfig);
-  if (slidersConfig && slidersConfig.IsMap()) {
-    node["slidersConfig"] = slidersConfig;
-  }
-
-  // Color lcd theme settings are not used in EdgeTx
-  // RadioTheme::ThemeData themeData;
 
   node["ownerRegistrationID"] = rhs.registrationId;
 
@@ -361,6 +380,7 @@ bool convert<GeneralSettings>::decode(const Node& node, GeneralSettings& rhs)
   node["board"] >> flavour;
 
   auto fw = getCurrentFirmware();
+  auto board = fw->getBoard();
 
   qDebug() << "Settings version:" << rhs.semver << "File flavour:" << flavour.c_str() << "Firmware flavour:" << fw->getFlavour();
 
@@ -521,16 +541,34 @@ bool convert<GeneralSettings>::decode(const Node& node, GeneralSettings& rhs)
   node["switchConfig"] >> switchConfig;
   switchConfig.copy(rhs.switchName, rhs.switchConfig);
 
+  //  TODO: revisit when Companion refactored to support adc
+  //  adc pots and sliders decoded into a single array but Compapanion has separate arrays
+  int maxPots = CPN_MAX_POTS + CPN_MAX_SLIDERS; // must match YamlPotConfig declaration
+  char potName[maxPots][HARDWARE_NAME_LEN + 1];
+  unsigned int potConfig[maxPots];
+
   YamlPotConfig potsConfig;
   node["potsConfig"] >> potsConfig;
-  potsConfig.copy(rhs.potName, rhs.potConfig);
+  potsConfig.copy(potName, potConfig);
 
-  YamlSliderConfig slidersConfig;
-  node["slidersConfig"] >> slidersConfig;
-  slidersConfig.copy(rhs.sliderName, rhs.sliderConfig);
+  int numPots = Boards::getCapability(board, Board::Pots);
 
-  // Color lcd theme settings are not used in EdgeTx
-  // RadioTheme::ThemeData themeData;
+  for (int i = 0; i < numPots; i++) {
+    strcpy(rhs.potName[i], potName[i]);
+    rhs.potConfig[i] = potConfig[i];
+  }
+
+  if (radioSettingsVersion < SemanticVersion(QString(CPN_ADC_REFACTOR_VERSION))) {
+    YamlSliderConfig slidersConfig;
+    node["slidersConfig"] >> slidersConfig;
+    slidersConfig.copy(rhs.sliderName, rhs.sliderConfig);
+  }
+  else {
+    for (int i = 0; i < Boards::getCapability(board, Board::Sliders); i++) {
+      strcpy(rhs.sliderName[i], potName[numPots + i]);
+      rhs.sliderConfig[i] = potConfig[numPots + i];
+    }
+  }
 
   node["ownerRegistrationID"] >> rhs.registrationId;
 

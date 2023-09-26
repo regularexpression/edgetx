@@ -53,14 +53,15 @@
 
 #define TR_AUX_SERIAL_MODES            "OFF","Telem Mirror","Telemetry In","SBUS Trainer","LUA","CLI","GPS","Debug","SpaceMouse","External module"
 #define TR_SWTYPES                     "None","Toggle","2POS","3POS"
-#define TR_POTTYPES                    "None",TR("Pot w. det","Pot with detent"),TR("Multipos","Multipos Switch"),"Pot","Slider"
+#define TR_POTTYPES                    "None",TR("Pot w. det","Pot with detent"),TR("Multipos","Multipos Switch"),"Pot"
+#define TR_SLIDERTYPES                 "None","Slider"
 #define TR_VPERSISTENT                 "OFF","Flight","Manual Reset"
 #define TR_COUNTRY_CODES               TR("US","America"),TR("JP","Japan"),TR("EU","Europe")
 #define TR_USBMODES                    "הצג לי אופציות",TR("Joyst","חיבור משחק קבוע"),TR("SDCard","העברת נתונים קבוע"),"חיבור סיריילי קבוע"
 #define TR_JACK_MODES                  "Ask","Audio","Trainer"
-#define TR_TELEMETRY_PROTOCOLS         "FrSky S.PORT","FrSky D","FrSky D (cable)","TBS Crossfire","Spektrum","AFHDS2A IBUS","Multi Telemetry"
 
 #define TR_SBUS_INVERSION_VALUES       "normal","not inverted"
+#define TR_MULTI_TELEMETRY_MODE        "Off","On","Off+Aux","On+Aux"
 #define TR_MULTI_CUSTOM                "עיצוב מיוחד"
 #define TR_VTRIMINC                    TR("Expo","הולך ומתעצם"),TR("ExFine","זז ב-1"),"זז ב-2","זז ב-3","זז ב-6"
 #define TR_VDISPLAYTRIMS               "אל תציג","הצג שינוי בלבד","הצג"
@@ -170,18 +171,13 @@
 #define TR_SF_SCREENSHOT               "צילום מסך"
 #define TR_SF_RACING_MODE              "מצב תחרות"
 #define TR_SF_DISABLE_TOUCH            "ללא מסך מגע"
+#define TR_SF_DISABLE_AUDIO_AMP        "Audio Amp Off"
 #define TR_SF_SET_SCREEN               "הגדרת מסך ראשי"
 #define TR_SF_RESERVE                  "[reserve]"
 
-#define TR_VFSWFUNC                    TR_SF_SAFETY,"Trainer","Inst. Trim","Reset","Set",TR_ADJUST_GVAR,"Volume","SetFailsafe","RangeCheck","ModuleBind",TR_SOUND,TR_PLAY_TRACK,TR_PLAY_VALUE,TR_SF_RESERVE,TR_SF_PLAY_SCRIPT,TR_SF_RESERVE,TR_SF_BG_MUSIC,TR_VVARIO,TR_HAPTIC,TR_SDCLOGS,"Backlight",TR_SF_SCREENSHOT,TR_SF_RACING_MODE,TR_SF_DISABLE_TOUCH, TR_SF_SET_SCREEN TR_SF_TEST
-
 #define TR_FSW_RESET_TELEM             TR("Telm", "טלמטריה")
+#define TR_FSW_RESET_TIMERS            "שעון 1","שעון 2","שעון 3"
 
-#if LCD_W >= 212
-  #define TR_FSW_RESET_TIMERS          "שעון 1","שעון 2","שעון 3"
-#else
-  #define TR_FSW_RESET_TIMERS          "שעון 1","שעון 2","שעון 3"
-#endif
 
 #define TR_VFSWRESET                   TR_FSW_RESET_TIMERS,TR("All","Flight"),TR_FSW_RESET_TELEM
 
@@ -343,9 +339,9 @@
 #define TR_BEEPCTR                     TR("Ctr Beep", "Center Beep")
 #define TR_USE_GLOBAL_FUNCS            TR("Glob.Funcs", "שימוש בפונקציות גלובליות")
 #define TR_PROTOCOL                    TR("Proto", "Protocol")
-  #define TR_PPMFRAME                  INDENT "PPM frame"
-  #define TR_REFRESHRATE               TR(INDENT "Refresh", INDENT "Refresh rate")
-  #define STR_WARN_BATTVOLTAGE         TR(INDENT "Output is VBAT: ", INDENT "Warning: output level is VBAT: ")
+#define TR_PPMFRAME                    INDENT "PPM frame"
+#define TR_REFRESHRATE                 TR(INDENT "Refresh", INDENT "Refresh rate")
+#define STR_WARN_BATTVOLTAGE           TR(INDENT "Output is VBAT: ", INDENT "Warning: output level is VBAT: ")
 #define TR_WARN_5VOLTS                 "Warning: output level is 5 volts"
 #define TR_MS                          "ms"
 #define TR_SWITCH                      "מתג"
@@ -514,7 +510,11 @@
 #define TR_PPM_TRAINER                 "TR"
 #define TR_CH                          "ערוץ "
 #define TR_MODEL                       "מודל"
+#if defined(SURFACE_RADIO)
+#define TR_FM                          "DM"
+#else
 #define TR_FM                          "FM"
+#else
 #define TR_EEPROMLOWMEM                "EEPROM low mem"
 #define TR_PRESS_ANY_KEY_TO_SKIP       "לחץ על המסך או על כפתור"
 #define TR_THROTTLE_NOT_IDLE           "סטיק מצערת פתוח"
@@ -546,8 +546,13 @@
 #define TR_CHANNEL2FAILSAFE            "הגדר מצב נוכחי כקבוע"
 #define TR_MENUMODELSEL                TR("MODELSEL", "MODEL SELECTION")
 #define TR_MENU_MODEL_SETUP            TR("הגדרות מודל", "הגדרות מודל")
+#if defined(SURFACE_RADIO)
+#define TR_MENUFLIGHTMODES             "DRIVE MODES"
+#define TR_MENUFLIGHTMODE              "DRIVE MODE"
+#else
 #define TR_MENUFLIGHTMODES             "מצבי טיסה"
 #define TR_MENUFLIGHTMODE              "מצב טיסה"
+#endif
 #define TR_MENUHELISETUP               "הגדרות מסוק"
 
   #define TR_MENUINPUTS                "כניסות"
@@ -687,7 +692,7 @@
 #define TR_POWER_METER_INT             "Power Meter (INT)"
 #define TR_SPECTRUM_ANALYSER_EXT       "Spectrum (EXT)"
 #define TR_SPECTRUM_ANALYSER_INT       "Spectrum (INT)"
-#define TR_SDCARD_FULL                  "הדיסק מלא״
+#define TR_SDCARD_FULL                  "הדיסק מלא״"
 #if defined(COLORLCD)
 #define TR_SDCARD_FULL_EXT TR_SDCARD_FULL "\לוגים ושמירת צילומי מסך מושבתים"
 #else
@@ -921,6 +926,7 @@
 #define TR_BIND                        "צימוד"
 #define TR_REGISTER                    TR("Reg", "Register")
 #define TR_MODULE_RANGE                BUTTON(TR("Rng", "בדיקת טווח קליטה"))
+#define TR_RANGE_TEST                  "בדיקת טווח"
 #define TR_RECEIVER_OPTIONS            TR("REC. OPTIONS", "RECEIVER OPTIONS")
 #define TR_RESET_BTN                   BUTTON("איפוס")
 #define TR_DEBUG                       "איבחון"
@@ -1044,6 +1050,7 @@
   #define TR_TIMER_SOURCE              "מקור השעון"
   #define TR_SIZE                      "גודל"
   #define TR_SHADOW                    "הצללה"
+  #define TR_ALIGNMENT                 "יישור"
   #define TR_ALIGN_LABEL               "Align label"
   #define TR_ALIGN_VALUE               "Align value"
   #define TR_ALIGN_OPTS                { "שמאל", "מרכז", "ימין" }
@@ -1072,8 +1079,6 @@
 #define TR_BL_EXIT                    "יציאה"
 #define TR_BL_DIR_MISSING             " ארכיון חסר"
 #define TR_BL_DIR_EMPTY               " ארכיון ריק"
-#define TR_BL_WRITING_FW              "... כותב תוכנה"
-#define TR_BL_WRITING_COMPL           "כתיבה הושלמה"
 
 #if LCD_W >= 480
   #define TR_BL_INVALID_FIRMWARE       "Not a valid firmware file"
@@ -1092,17 +1097,23 @@
 #if defined(PCBTARANIS)
    // Bootloader Taranis specific - Ascii only
   #define TR_BL_RESTORE_EEPROM        "Restore EEPROM"
+  #define TR_BL_WRITING_FW            "...ממתין"
+  #define TR_BL_WRITING_COMPL         "כתיבה הושלמה"
   #if defined(RADIO_COMMANDO8)
     #define TR_BL_POWER_KEY           "לחץ על כפתור ההפעלה"
     #define TR_BL_FLASH_EXIT          "Exit the flashing mode."
   #endif
 #elif defined(PCBHORUS)
    // Bootloader Horus specific - Ascii only
+  #define TR_BL_WRITING_FW            "... כותב תוכנה"
+  #define TR_BL_WRITING_COMPL         "כתיבה הושלמה"
   #define TR_BL_SELECT_KEY            "[ENT] לבחירת קובץ"
   #define TR_BL_FLASH_KEY             "Hold [ENT] long to flash"
   #define TR_BL_EXIT_KEY              "[RTN] ליציאה"
 #elif defined(PCBNV14)
    // Bootloader NV14 specific - Ascii only
+  #define TR_BL_WRITING_FW            "Writing Firmware ..."
+  #define TR_BL_WRITING_COMPL         "Writing Completed"
   #define TR_BL_RF_USB_ACCESS         "RF USB access"
   #define TR_BL_CURRENT_FW            "Current Firmware:"
   #define TR_BL_SELECT_KEY            "[R TRIM] to select file"
@@ -1181,6 +1192,7 @@
 #define TR_MENU_LUA                    STR_CHAR_LUA "Lua סקריפטים"
 #define TR_MENU_STICKS                 STR_CHAR_STICK "סטיקים"
 #define TR_MENU_POTS                   STR_CHAR_POT "גלגלות"
+#define TR_MENU_MIN                    STR_CHAR_FUNCTION "מינימום"
 #define TR_MENU_MAX                    STR_CHAR_FUNCTION "מקסימום"
 #define TR_MENU_HELI                   STR_CHAR_CYC "Cyclic"
 #define TR_MENU_TRIMS                  STR_CHAR_TRIM "קיזוזים"
